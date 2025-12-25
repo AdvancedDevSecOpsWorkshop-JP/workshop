@@ -292,7 +292,7 @@ image::ocp-app/serverless.png[width=80%]
 
 * *Create* をクリックします。
 
-https://docs.openshift.com/container-platform/latest/applications/creating_applications/odc-creating-applications-using-developer-perspective.html[For more information^]
+https://docs.openshift.com/container-platform/latest/applications/creating_applications/odc-creating-applications-using-developer-perspective.html[参考情報^]
 
 ==== ビルドとデプロイを確認する
 
@@ -338,7 +338,7 @@ image::ocp-app/logs_webui.png[width=60%]
 
 * トラフィックがなくなると pod が *zero* までスケールダウンすることを確認します。Serverless アプリケーションはトラフィックを受けて初めて稼働し、受信するトラフィック量に応じて pod が作成されます。
 
-More information on https://docs.openshift.com/serverless/latest/knative-serving/autoscaling/serverless-autoscaling-developer.html[Serving Autoscaling^]
+https://docs.openshift.com/serverless/latest/knative-serving/autoscaling/serverless-autoscaling-developer.html[Serving Autoscaling の詳細情報^]
 
 *おめでとうございます!*
 ほんの数クリックで OpenShift に新しいアプリケーションをビルドしてデプロイできました！
