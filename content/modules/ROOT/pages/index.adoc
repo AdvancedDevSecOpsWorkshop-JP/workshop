@@ -9,7 +9,7 @@
 
 == 2. 主なポイント（Key Takeaways）
 
-* *Red Hat OpenShift* を *“信頼性・包括的・一貫性”* を備えたアプリケーション・プラットフォームとして最大限に活用する方法を学ぶ。
+* *Red Hat OpenShift* を *“信頼性/包括的/一貫性”* を備えたアプリケーション・プラットフォームとして最大限に活用する方法を学ぶ。
 * *OpenShift Pipelines* を使った *CI/CD* パイプラインを深掘りします。
 * *OpenShift GitOps* と *Trusted Software Supply Chain* を活用し、セキュアに *DevSecOps* のベストプラクティスを採用します。
 

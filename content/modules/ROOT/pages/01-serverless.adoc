@@ -1,4 +1,4 @@
-= OpenShift as An Application Platform: Trusted - Comprehensive - Consistent(45 mins)
+= Application Platform としての OpenShift: 信頼性/包括的/一貫性(45 mins)
 
 このモジュールでは、OpenShift をアプリケーション・プラットフォームとして包括的に理解します。
 モダナイゼーションから、オープン・ハイブリッドクラウド上でのアプリケーションのビルド／デプロイ／管理、さらに Serverless による自動スケーリングまで、日々の作業を加速させるためのポイントを学びます。
@@ -14,9 +14,9 @@
 * アプリケーションの状態、CPU 使用率、イベントを確認します。
 
 [#openshift_as_an_application_platform_overview]
-== OpenShift as an Application Platform Overview
+== Application Platform としての OpenShift について
 
-*Red Hat OpenShift* は、オープンスタンダードに基づいた、 *“信頼性・包括的・一貫性”* を備えたアプリケーション・プラットフォームであり、
+*Red Hat OpenShift* は、オープンスタンダードに基づいた、 *“信頼性/包括的/一貫性”* を備えたアプリケーション・プラットフォームであり、
 レガシーアプリケーションからクラウドネイティブアプリケーションまで、開発・提供・実行を成功させるための重要な機能を備えています。
 
 image::ocp-app/devops_01_ocpapp_platform.png[width=100%]
@@ -86,25 +86,23 @@ image::ocp-app/coolstore_diagram.png[width=80%]
 coolstore のマイクロサービス群を構成する最終的なトポロジー（Topology）表示のイメージ
 
 [#building_a_serverless_application_with_the_openshift_application_platform]
-== Building a Serverless application with the OpenShift Application Platform
+== OpenShift Application Platform で Serverless アプリケーションを構築する
 
-=== Access the OpenShift Web Console
+=== OpenShift Web Console にアクセスする
 
-You can access the OpenShift Console at the following URL:
+以下の URL から OpenShift Console にアクセスできます。
 
 link:{openshift_console_url}[{openshift_console_url},window='_blank']
 
-You will see a login screen with two options, select the *Keycloak* option.
+ログイン画面が表示され、2つの選択肢があるので、*Keycloak* を選んでください。
 
 image::ocp-app/openshift_login.png[width=80%]
 
 [IMPORTANT]
-If you accidentally login with the `htpasswd_provider` option then you will not be
-able to login to OpenShift with Keycloak. Please ask your instructor
-to correct it by deleting the OpenShift user and identity before logging in again
-with Keycloak.
+誤って `htpasswd_provider` でログインしてしまうと、Keycloak では OpenShift にログインできなくなります。
+Keycloak で再度ログインする前に、OpenShift の user と identity を削除して修正する必要がありますので、講師に依頼してください。
 
-You will be redirected to Keycloak, use your credentials to login:
+Keycloak にリダイレクトされるので、認証情報を使ってログインします:
 
 * *User*:
 +
@@ -122,17 +120,16 @@ You will be redirected to Keycloak, use your credentials to login:
 {password}
 ----
 
-Once you have logged in you will be redirected back to the OpenShift Console.
+ログイン後、OpenShift Console に戻ります。
 
-=== Log in the OpenShift using the terminal:
+=== ターミナルから OpenShift にログインする
 
-Since we are using Keycloak SSO you will need to copy the CLI login
-command from the console. To do so, click on your user name in
-the upper right corner and select `Copy login command`
+Keycloak SSO を利用しているため、コンソールから CLI ログインコマンドをコピーする必要があります。
+画面右上のユーザー名をクリックし、`Copy login command` を選択してください。
 
 image::ocp-app/copy_login_command.png[width=80%]
 
-This will redirect you to Keycloak to login with your credentials:
+Keycloak にリダイレクトされるので、認証情報でログインします:
 
 * *User*:
 +
@@ -150,13 +147,11 @@ This will redirect you to Keycloak to login with your credentials:
 {password}
 ----
 
-Once you have logged in you will see a page with a link `Display Token`, click
-the link to view the token. Copy the oc login command as per below and paste
-it into the terminal.
+ログイン後、`Display Token` というリンクがあるページが表示されるので、そのリンクをクリックしてトークンを表示します。以下のように `oc login` コマンドをコピーし、ターミナルに貼り付けてください。
 
 image::ocp-app/oc_login_command.png[width=80%]
 
-When you paste the copied command into the terminal you will be prompted to accept the certificate, enter 'y' as per below:
+コマンドを貼り付けると、証明書の受け入れ確認が表示されるので、以下のように 'y' を入力します。
 
 [.console-output]
 [source,subs="+attributes,macros+"]
@@ -182,14 +177,14 @@ Welcome! See 'oc help' to get started.
 ----
 
 [NOTE]
-In later versions of OpenShift you can avoid this process by using `oc login --web <openshift-api-url>`. This
-will start a web server running on localhost to handle the OIDC redirect process. Unfortunately in this
-workshop since we are running the terminal inside a pod there is no way for Keycloak to redirect back to
-the terminal in the pod hence we use the "Copy login command" flow in this workshop.
+OpenShift の新しいバージョンでは `oc login --web <openshift-api-url>` を使うことで、この手順を避けられます。
+これは localhost 上で Web サーバーを起動し、OIDC のリダイレクト処理を行う方式です。
+ただし本ワークショップでは、ターミナルを pod 内で実行しているため、Keycloak が pod 内のターミナルへリダイレクトして戻すことができません。
+そのため、このワークショップでは `Copy login command` の手順を使用します。
 
-=== Create your project
+=== プロジェクトを作成する
 
-* Create a new project to deploy the {app_name}. Run the following command in the terminal:
+* {app_name} をデプロイするための新しいプロジェクトを作成します。ターミナルで以下のコマンドを実行してください。
 
 [.console-input]
 [source,sh,subs="attributes",role=execute]
@@ -197,7 +192,7 @@ the terminal in the pod hence we use the "Copy login command" flow in this works
 oc new-project coolstore-dev-{user}
 ----
 
-* Clone the project to access the files.
+* Githubのリポジトリからクローンしてファイルにアクセスします。
 
 [.console-input]
 [source,bash,subs="attributes+,+macros"]
@@ -205,7 +200,7 @@ oc new-project coolstore-dev-{user}
 git clone -b main --single-branch https://gitea-gitea.{subdomain}/user1/workshop ~/workshop
 ----
 
-* Explore the yaml file that will deploy the catalog.
+* catalog をデプロイする yaml ファイルを確認します。
 
 [.console-input]
 [source,bash,subs="+attributes,macros+"]
@@ -213,7 +208,7 @@ git clone -b main --single-branch https://gitea-gitea.{subdomain}/user1/workshop
 cd ~/workshop/content/modules/ROOT/files/module-01
 ----
 
-* Install the the Coolstore components:
+* Coolstore のコンポーネントをインストールします。
 
 [.console-input]
 [source,bash,subs="+attributes,macros+"]
@@ -231,29 +226,31 @@ output:
     service/inventory-quarkus created
 ----
 
-=== Explore the topology view
-The Topology view in the Developer perspective of the web console provides a visual representation of all the applications within a project, their build status, and the associated components and services.
+=== Topology view を確認する
+Web コンソールの Developer perspective にある Topology view は、プロジェクト内のすべてのアプリケーション、ビルド状況、関連コンポーネント／サービスを可視化して表示します。
 
-==== Review the set of microservices that composed the Coolstore application
+==== Coolstore アプリケーションを構成するマイクロサービス群を確認する
 
-** Click on *Topology* to access the Developer's Perspective
+** *Topology* をクリックして Developer Perspective にアクセスします。
 
 image::ocp-app/coolstore_topology.png[width=80%]
 
-All the components shown are deployments, which are in charge of managing your application. They are all in blue, indicating that the application is running. The arrows will indicate which components are connected.
+表示されているコンポーネントはすべて deployment で、アプリケーションの管理を担います。
+すべて青色になっているのは、アプリケーションが稼働中であることを示します。
+矢印は、どのコンポーネント同士が接続されているかを示します。
 
-https://docs.openshift.com/container-platform/latest/applications/odc-viewing-application-composition-using-topology-view.html[For more information^]
+https://docs.openshift.com/container-platform/latest/applications/odc-viewing-application-composition-using-topology-view.html[Topology view の詳細はこちら^]
 
-As you can see, everything is there except the UI and the catalog. In the next section, you will be moving the UI into OpenShift.
+ご覧のとおり、UI と catalog 以外はそろっています。次のセクションでは、この UI を OpenShift に移行します。
 
-=== Import the application
+=== アプリケーションをインポートする
 
-In this section, you will move the UI source code into OpenShift using the Developer Perspective.
+このセクションでは、Developer Perspective を使って UI のソースコードを OpenShift に取り込みます。
 
-1. Access Developer Perspective by clicking on *Developer* on the left menu.
-2. Click on *+Add*
-3. *Import from Git, under Git Repository*
-4. Git Repo URL
+1. 左メニューの *Developer* をクリックして Developer Perspective に切り替えます。
+2. *+Add* をクリックします。
+3. Git Repository の下にある、*Import from Git* を選択します。
+4. Git Repo URL を入力します。
 +
 [.console-input]
 [source,bash,subs="+attributes",role=execute]
@@ -262,16 +259,16 @@ https://github.com/rhpds/web-nodejs.git
 ----
 +
 
-*Note*: Ignore the error "Danger alert: Import is not possible." You will be updating the Builder Option.
+*Note*: "Danger alert: Import is not possible." というエラーは無視してください。後で Builder Option を更新します。
 
-5. Edit *Import Strategy* and select *Builder Image* (keep Node.js but change to Builder Image version: 18-ubi8)
+5. *Import Strategy* を編集し、*Builder Image* を選択します（Node.js のまま、Builder Image のバージョンを 18-ubi8 に変更）。
 +
 image::ocp-app/use-builder-image-ubi-18.png[width=80%]
 +
-6. On Deploy -> Resource Type, select *Serverless Deployment*
-7. Click on *Show advanced Deployment option*: and add *an environment variable* to connect with the Gateway URL:
+6. Deploy -> Resource Type で、*Serverless Deployment* を選択します。
+7. *Show advanced Deployment option* をクリックし、Gateway URL に接続するための *環境変数* を追加します。
 
-*Note*: Ensure you copy the entire Gateway URL before pasting it.
+*Note*: 貼り付ける前に、Gateway URL 全体をコピーしていることを確認してください。
 
     - *name*:
 +
@@ -289,97 +286,101 @@ SECURE_COOLSTORE_GW_ENDPOINT
 https://gateway-vertx-coolstore-dev-{user}.{openshift_cluster_ingress_domain}/
 ----
 
-Verify your input data is the same as shown below:
+以下のように入力内容が一致していることを確認します。
 
 image::ocp-app/serverless.png[width=80%]
 
-* Click on *Create*
+* *Create* をクリックします。
 
 https://docs.openshift.com/container-platform/latest/applications/creating_applications/odc-creating-applications-using-developer-perspective.html[For more information^]
 
-==== Verify build and deployment:
+==== ビルドとデプロイを確認する
 
-1. Select the new Service by clicking on *No Revisions*
-2. On the right menu, Click on the *Resources* tab
+1. *No Revisions* をクリックして新しい Service を選択します。
+2. 右側メニューの *Resources* タブをクリックします。
 
 image::ocp-app/serverless_resources.png[width=80%]
 
-*Note*: Revision will be ready once the build process is completed.
+*Note*: build が完了すると Revision が Ready になります。
 
-* Verify the build process:
+* ビルド処理を確認します:
 
-1. Click on the *View Logs* on the *Builds* section
-2. Verify that the build is running and that the logs have no issues. The log will show *Push successful* in the last line once has finished.
+1. *Builds* セクションの *View Logs* をクリックします。
+2. ビルドが実行中で、ログに問題がないことを確認します。完了すると、ログの最終行に *Push successful* と表示されます。
 
-**Notes**: The build might take a few minutes to complete.
+**Notes**: ビルドが完了するまで数分かかる場合があります。
 
 image::ocp-app/build_ok.png[width=80%]
 
-Once the Build has finished the application will run successfully.
+ビルド完了後、アプリケーションは正常に起動します。
 
-* Go back to the *Topology view*: Click on *Topology* on the left menu.
+* 左メニューの *Topology* をクリックして *Topology view* に戻ります。
 
 image::ocp-app/coolstore_topology_web.png[width=80%]
 
-The application is triggered once the build process is completed. Additionally, the application will restart when it receives any HTTP requests by accessing the application in the web browser.
+ビルド完了後にアプリケーションが起動します。
+また、Web ブラウザからアプリケーションにアクセスし HTTP リクエストを受けると、アプリケーションが再起動（起動）します。
 
-==== Verify the application is running
+==== アプリケーションが稼働していることを確認する
 
-* Click on the *Routes* under the Resources tab. Verify that the application is running.
+* Resources タブの *Routes* をクリックし、アプリケーションが稼働していることを確認します。
 
 
 image::ocp-app/coolstore_website_black.png[width=80%]
 
-**Notes**: As you can see, no catalog is available. We need to install the catalog application to access the catalog data.
+**Notes**: ご覧のとおり、現時点では catalog が表示されません。catalog データにアクセスするには catalog アプリケーションをインストールする必要があります。
 
-* Go back to the *Topology view* in the Web Console and select the web application.
+* Web Console の *Topology view* に戻り、Web アプリケーションを選択します。
 
-* Explore the application logs by clicking on *View logs* on the *Resources Tab* -> *Pods* section.
+* *Resources Tab* -> *Pods* セクションの *View logs* をクリックして、アプリケーションログを確認します。
 
 image::ocp-app/logs_webui.png[width=60%]
 
-* Observe the pods scaling down to *zero* once there is no more traffic. A serverless application will only start running once it starts receiving traffic, and pods will be created depending on how much traffic the application will be receiving.
+* トラフィックがなくなると pod が *zero* までスケールダウンすることを確認します。Serverless アプリケーションはトラフィックを受けて初めて稼働し、受信するトラフィック量に応じて pod が作成されます。
 
 More information on https://docs.openshift.com/serverless/latest/knative-serving/autoscaling/serverless-autoscaling-developer.html[Serving Autoscaling^]
 
-*Congratulations* you build and deploy a new application into OpenShift in just a few clicks!
+*おめでとうございます!*
+ほんの数クリックで OpenShift に新しいアプリケーションをビルドしてデプロイできました！
 
 [#building_a_backend_application_using_the_openshift_application_platform_with_openshift_pipelines]
-== Building a backend application using the OpenShift Application Platform with OpenShift Pipelines
+== OpenShift Pipelines を使って OpenShift Application Platform 上でバックエンドアプリケーションを構築する
 
-In this section, you will move the catalog Java Spring Boot application into OpenShift using the Developer Perspective. OpenShift will create an automated CI/CD pipeline and all the manifests required by the application.
-
-
-=== *CI/CD with OpenShift Pipelines*
-
-Red Hat OpenShift Pipelines is a cloud-native, continuous integration and continuous delivery (CI/CD) solution based on Kubernetes resources. It uses Tekton building blocks to automate deployments across multiple platforms by abstracting away the underlying implementation details. Tekton introduces a number of standard custom resource definitions (CRDs) for defining CI/CD pipelines that are portable across Kubernetes distributions.
+このセクションでは、Developer Perspective を使って catalog（Java Spring Boot）アプリケーションを OpenShift に移行します。OpenShift は、自動化された CI/CD パイプラインと、アプリケーションに必要な マニフェスト 一式を作成します。
 
 
-https://docs.openshift.com/pipelines/latest/about/understanding-openshift-pipelines.html[OpenShift Pipelines^] provides a Kubernetes-native CI/CD framework to design and run each step of the CI/CD pipeline in its own container. It can scale independently to meet the on-demand pipelines with predictable outcomes.
+=== *OpenShift Pipelines による CI/CD*
 
-=== OpenShift Pipeline Concepts
+Red Hat OpenShift Pipelines は、Kubernetes リソースをベースにしたクラウドネイティブな継続的インテグレーション／継続的デリバリー（CI/CD）ソリューションです。
+Tekton のビルディングブロックを利用し、基盤となる実装の詳細を抽象化することで、複数プラットフォームにまたがるデプロイを自動化します。
+Tekton は、Kubernetes ディストリビューションをまたいで移植可能な CI/CD パイプラインを定義するために、標準的な Custom Resource Definitions（CRDs）を複数導入しています。
 
-* *Task* resources are the building blocks of a pipeline and consist of sequentially executed steps. It is essentially a function of inputs and outputs.
 
-* *Steps* are a series of commands that are sequentially executed by the task and achieve a specific goal, such as building an image.
+https://docs.openshift.com/pipelines/latest/about/understanding-openshift-pipelines.html[OpenShift Pipelines^] は、CI/CD パイプラインの各ステップをそれぞれ独立したコンテナで設計・実行できる、Kubernetes ネイティブな CI/CD フレームワークを提供します。オンデマンドのパイプラインに合わせて独立してスケールでき、予測可能な結果を得られます。
 
-* *Task Run* An invocation of a task with inputs and outputs
+=== OpenShift Pipeline の概念
+
+* *Task* リソースはパイプラインの構成要素であり、順次実行されるステップで構成されます。基本的には、入力と出力を持つ “関数” のようなものです。
+
+* *Steps* は、Task によって順次実行される一連のコマンドで、イメージのビルドなど、特定の目的を達成します。
+
+* *Task Run* は、入力と出力を指定して Task を実行する（呼び出す）ことです。
 
 image::ocp-app/task_run.png[width=80%]
 
-* *Pipeline Resource* Inputs and outputs to tasks and pipelines (git, image, etc)
-* *Pipeline* A graph of tasks executed in a certain order
-* *Pipeline Run* An invocation of a pipeline with inputs and outputs
+* *Pipeline Resource* は、Task や Pipeline の入力／出力（git、image など）です。
+* *Pipeline* は、一定の順序で実行される Task のグラフです。
+* *Pipeline Run* は、入力と出力を指定して Pipeline を実行する（呼び出す）ことです。
 
 image::ocp-app/pipeline_run.png[width=80%]
 
-=== Create your backend application
+=== バックエンドアプリケーションを作成する
 
 
-1. Access Developer Perspective
-2. Click on *+Add*
-3. *Import from Git, under Git Repository*
-4. Git Repo URL:
+1. Developer Perspective にアクセスします。
+2. *+Add* をクリックします。
+3. Git Repository の下にある、*Import from Git* を選択します。
+4. Git Repo URL を入力します。
 +
 [.console-input]
 [source,bash,subs="+attributes",role=execute]
@@ -388,88 +389,95 @@ https://github.com/rhpds/catalog-spring-boot.git
 ----
 +
 
-*Note*: Ignore the error "Danger alert: Import is not possible." You will be updating the Builder Option.
+*Note*: "Danger alert: Import is not possible." というエラーは無視してください。後で Builder Option を更新します。
 
-5. Edit *Import Strategy* and select *Builder Image* (keep Java and Builder Image version: *openjdk-17-ubi8*)
-6. On Build -> Build Option, select *Pipelines*
-7. On Resource Type, select *Deployment*
+5. *Import Strategy* を編集し、*Builder Image* を選択します（Java のまま、Builder Image のバージョンは *openjdk-17-ubi8*）。
+6. Build -> Build Option で *Pipelines* を選択します。
+7. Resource Type で *Deployment* を選択します。
 
-Verify your input data is the same as shown below:
+以下のように入力内容が一致していることを確認します。
 
 image::ocp-app/deployment.png[width=80%]
 
-* Click on *Create*
+* *Create* をクリックします。
 
-==== Verify build and deployment:
+==== ビルドとデプロイを確認する
 
-* Click the new Deployment *catalog-spring-boot* on the Topology view
-* Click on *Pipeline Runs*
+* Topology view で新しい Deployment *catalog-spring-boot* をクリックします。
+* *Pipeline Runs* をクリックします。
 
 image::ocp-app/pipelines_detail.png[width=80%]
 
-* Verify that the pipeline is running and that everything is green.
+* Pipeline が実行中で、すべてが緑（成功）になっていることを確認します。
 
-**Notes**: The pipeline might take a few minutes to complete. Explore the Pipeline Run logs.
+**Notes**: Pipeline が完了するまで数分かかる場合があります。Pipeline Run のログも確認してみてください。
 
 image::ocp-app/pipelines_deployment.png[width=80%]
 
-Once the Pipeline has finished, it will be shown as Pipeline Succeeded, and Pod will run successfully.
+Pipeline が完了すると、Pipeline Succeeded と表示され、Pod が正常に稼働します。
 
-* Explore the Pipeline logs:
+* Pipeline のログを確認します。
 
-** Click on the Logs tab and explore the logs generated by each Task.
+** Logs タブをクリックし、各 Task が出力するログを確認します。
 
 image::ocp-app/pipeline_logs.png[width=60%]
 
-* Verify the application is running as expected
-** Return to the topology view: Click *Topology* on the left menu.
-** Click on the UI Serverless deployment, *web-nodejs-git...*
-** Click on the *Routes* under the Resources tab. Verify that the application is running.
+* アプリケーションが期待どおり稼働していることを確認します。
+** 左メニューの *Topology* をクリックして topology view に戻ります。
+** UI の Serverless deployment（*web-nodejs-git...*）をクリックします。
+** Resources タブの *Routes* をクリックし、アプリケーションが稼働していることを確認します。
 
-The catalog information is now available.
+これで catalog 情報が表示されるようになります。
 
 image::ocp-app/coolstore_website.png[width=80%]
 
 
-* Observe the application CPU usage
+* アプリケーションの CPU 使用率を確認する
 
-In the Observe section of OpenShift Container Platform web console, you can access and manage monitoring features such as metrics, alerts, monitoring dashboards, and metrics targets. https://docs.openshift.com/container-platform/4.14/monitoring/monitoring-overview.html[More information^]
+OpenShift Container Platform の Web Console の Observe セクションでは、メトリクス、アラート、監視ダッシュボード、メトリクスのターゲットなど、監視機能にアクセスして管理できます。
+https://docs.openshift.com/container-platform/4.14/monitoring/monitoring-overview.html[監視機能の詳細はこちら^]
 
-* Go back to the Topology View, Click on *Topology* on the left menu.
+* Topology View に戻り、左メニューの *Topology* をクリックします。
 
-* Access the *Observe* tab.
+* *Observe* タブを開きます。
 
 image::ocp-app/coolstore_topology_observe.png[width=60%]
 
-* Click on *View Dashboard* to explore the application metrics:
+* *View Dashboard* をクリックして、アプリケーションのメトリクスを確認します。
 
 image::ocp-app/view_dashboard.png[width=0%]
 
-* Explore the *CPU Usage*:
+* *CPU Usage* を確認します。
 
 image::ocp-app/dashboard_metrics.png[width=80%]
 
-* Explore all the available metrics:
+* 用可能なメトリクスをすべて確認します。
 
-** Select from the Dashboard dropdown the different metrics.
+** Dashboard のドロップダウンから、さまざまなメトリクスを選択します。
 
 image::ocp-app/available_metrics.png[width=80%]
 
-* Explore the *events*:
+* *events* を確認します。
 
 image::ocp-app/events.png[width=80%]
 
 https://docs.openshift.com/container-platform/latest/observability/monitoring/about-ocp-monitoring/about-ocp-monitoring.html[Reviewing monitoring dashboards^]
 
 [#conclusion]
-== Conclusion
+== セクションの振り返り
 
-With the Developer Perspective, you can create, build, and manage applications or the command line. The Developer perspective is a powerful tool that enables you to move applications from a Git repository, helm chart, jar file, and much more.
-*Serverless* allows the deployment of applications without the burden of operations. The application's pods will be created depending on how much traffic is received. Serverless is a way to save costs since the applications will only run when receiving traffic.
-*OpenShift Pipelines* allows teams to build and deploy applications via CI/CD. Pipelines can be autogenerated when selecting the The pipelines checkbox can be enhanced considering your organization's requirements and guidelines.
+Developer Perspective を使うと、アプリケーションを作成・ビルド・管理できます（コマンドラインでも同様に実施可能です）。
+Developer perspective は強力なツールであり、Git リポジトリ、helm chart、jar file など、さまざまなソースからアプリケーションを取り込めます。
+
+*Serverless* を使うことで、運用の負担を抱えることなくアプリケーションをデプロイできます。
+プリケーションの pod は受信トラフィック量に応じて作成されます。
+Serverless は、トラフィックを受けている間だけアプリケーションが稼働するため、コスト削減にもつながります。
+
+*OpenShift Pipelines* は、CI/CD によるアプリケーションのビルドとデプロイを可能にします。
+Pipelines は選択時に自動生成できます。また、組織の要件やガイドラインを踏まえて、生成されたパイプラインを強化・拡張できます。
 
 [#more_information]
-== More Information:
+== 参考情報
 
 * https://docs.openshift.com/container-platform/latest/applications/creating_applications/odc-creating-applications-using-developer-perspective.html[Creating applications using the Developer perspective^]
 * https://docs.openshift.com/container-platform/latest/applications/odc-viewing-application-composition-using-topology-view.html[Viewing application composition using the Topology view^]
