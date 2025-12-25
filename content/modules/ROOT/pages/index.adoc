@@ -1,48 +1,48 @@
-= Welcome to OpenShift DevSecOps Roadshow (10 minutes)
+= OpenShift DevSecOps Roadshowへようこそ（10分）
 :page-layout: home
 :!sectids:
 
-== 1. Introduction and Overview
+== 1. はじめに（Overview）
 
-*Welcome to the OpenShift DevSecOps Roadshow!*
-In this Roadshow, you will learn the techniques and technologies for adopting https://www.redhat.com/en/topics/devops[DevOps^] and https://www.redhat.com/en/topics/devops/what-is-devsecops[DevSecOps^] practices to run applications in https://www.redhat.com/en/technologies/cloud-computing/openshift[The Open Hybrid Cloud^].
+*OpenShift DevSecOps Roadshowへようこそ！*
+この Roadshow では、 https://www.redhat.com/en/technologies/cloud-computing/openshift[Open Hybrid Cloud^] でアプリケーションを運用するための https://www.redhat.com/en/topics/devops[DevOps^] および https://www.redhat.com/en/topics/devops/what-is-devsecops[DevSecOps^] のプラクティスを採用する技術と手法について学びます。
 
-== 2. Key Takeaways
+== 2. 主なポイント（Key Takeaways）
 
-* Learn how to leverage *Red Hat OpenShift*  as an *Application Platform Trusted - Comprehensive - Consistent capabilities*.
-* Dive into *CI/CD* pipelines using *OpenShift Pipelines*.
-* Adopt *DevSecOps* best practices securely with *OpenShift GitOps* and *Trusted Software Supply Chain*.
+* *Red Hat OpenShift* を *“信頼性・網羅性・一貫性”* を備えたアプリケーション・プラットフォームとして最大限に活用する方法を学ぶ。
+* *OpenShift Pipelines* を使った *CI/CD* パイプラインを深掘りします。
+* *OpenShift GitOps* と *Trusted Software Supply Chain* を活用し、セキュアに *DevSecOps* のベストプラクティスを採用します。
 
-== 3. Environment Overview
+== 3. 環境概要（Environment Overview）
 
-Our cluster is provisioned just for you and this roadshow. During this day, you will be accessing the same cluster with pre-defined credentials shared in each module.
+このクラスターは、皆さまとこの Roadshow のために専用でプロビジョニングされています。
+本日の演習では、各モジュールで共有される事前定義済みの認証情報（credentials）を使って、同一のクラスターにアクセスします。
 
-Below is a list of the technologies installed and configured in the OpenShift cluster.
+以下は、OpenShift クラスターにインストールおよび設定済みのテクノロジーの一覧です。
 
-
-=== 3.1 Technology Flow Diagram
+=== 3.1 テクノロジーフロー図
 
 image::intro/devops_env_architecture.png[width=100%]
-Fig 1. The diagram shows the technology stack and its interactions.
+図 1. この図は、テクノロジースタックとそれらの相互連携を示しています。
 
-=== 3.2 Technology Stack
+=== 3.2 テクノロジースタック
 
-* https://www.redhat.com/en/technologies/cloud-computing/openshift[Red Hat OpenShift^] is a unified platform to build, modernize, and deploy applications at scale. Work smarter and faster with a complete set of services for bringing apps to market on your choice of infrastructure.
+* https://www.redhat.com/en/technologies/cloud-computing/openshift[Red Hat OpenShift^] は、アプリケーションを大規模に ビルド・モダナイズ・デプロイ するための統合プラットフォームです。選択したインフラ上でアプリケーションを市場投入するためのサービス一式を提供し、よりスマートに、より速く作業を進められます。
 
-* https://docs.openshift.com/pipelines/latest/about/about-pipelines.html[Red Hat OpenShift Pipelines^] is a cloud-native, continuous integration and continuous delivery (CI/CD) solution based on Kubernetes resources. It uses Tekton building blocks to automate deployments across multiple platforms by abstracting away the underlying implementation details.
+* https://docs.openshift.com/pipelines/latest/about/about-pipelines.html[Red Hat OpenShift Pipelines^] は、Kubernetes リソースをベースにしたクラウドネイティブな継続的インテグレーション／継続的デリバリー（CI/CD）ソリューションです。Tekton のビルディングブロックを利用し、基盤となる実装の詳細を抽象化することで、複数プラットフォームにまたがるデプロイを自動化します。
 
-* https://docs.openshift.com/gitops/latest/understanding_openshift_gitops/about-redhat-openshift-gitops.html[Red Hat OpenShift GitOps^] is an Operator that uses Argo CD as the declarative GitOps engine. It enables GitOps workflows across multicluster OpenShift and Kubernetes infrastructure. Using Red Hat OpenShift GitOps, administrators can consistently configure and deploy Kubernetes-based infrastructure and applications across clusters and development lifecycles.
+* https://docs.openshift.com/gitops/latest/understanding_openshift_gitops/about-redhat-openshift-gitops.html[Red Hat OpenShift GitOps^] は、宣言的な GitOps エンジンとして Argo CD を利用する Operator です。マルチクラスターの OpenShift および Kubernetes インフラ全体で GitOps ワークフローを実現します。Red Hat OpenShift GitOps を使用することで、管理者はクラスターや開発ライフサイクル全体にわたって、Kubernetes ベースのインフラおよびアプリケーションを一貫した方法で設定・デプロイできます。
 
-* https://access.redhat.com/products/red-hat-build-of-keycloak[Red Hat Build of Keycloak^] is a cloud-native Identity Access Management solution based on the popular open source Keycloak project.
+* https://access.redhat.com/products/red-hat-build-of-keycloak[Red Hat Build of Keycloak^] は、人気のオープンソースプロジェクト Keycloak をベースにした、クラウドネイティブな ID／アクセス管理（IAM）ソリューションです。
 
-* https://www.redhat.com/en/technologies/cloud-computing/quay[Red Hat Quay^] is a security-focused and scalable private registry platform for managing content across globally distributed datacenter and cloud environments.
+* https://www.redhat.com/en/technologies/cloud-computing/quay[Red Hat Quay^] は、セキュリティを重視した、スケーラブルなプライベートレジストリ基盤です。グローバルに分散したデータセンターやクラウド環境にまたがってコンテンツを管理できます。
 
-* https://www.redhat.com/en/technologies/cloud-computing/openshift/advanced-cluster-security-kubernetes[Red Hat Advanced Cluster Security for Kubernetes^] is a Kubernetes-native security platform that equips you to build, deploy, and run cloud-native applications with more security. The solution helps protect containerized Kubernetes workloads in all major clouds and hybrid platforms, including Red Hat OpenShift, Amazon Elastic Kubernetes Service (EKS), Microsoft Azure Kubernetes Service (AKS), and Google Kubernetes Engine (GKE).
+* https://www.redhat.com/en/technologies/cloud-computing/openshift/advanced-cluster-security-kubernetes[Red Hat Advanced Cluster Security for Kubernetes^] は、Kubernetes ネイティブのセキュリティプラットフォームであり、クラウドネイティブアプリケーションをより安全に ビルド・デプロイ・実行できるよう支援します。本ソリューションは、Red Hat OpenShift、Amazon Elastic Kubernetes Service（EKS）、Microsoft Azure Kubernetes Service（AKS）、Google Kubernetes Engine（GKE）を含む主要なクラウドおよびハイブリッドプラットフォーム上の、コンテナ化された Kubernetes ワークロードの保護に役立ちます。
 
-* https://www.redhat.com/en/technologies/cloud-computing/openshift-data-foundation[Red Hat OpenShift Data Foundation^] previously Red Hat OpenShift Container Storage—is software-defined storage for containers. Red Hat OpenShift Data Foundation helps teams develop and deploy applications quickly and efficiently across clouds.
+* https://www.redhat.com/en/technologies/cloud-computing/openshift-data-foundation[Red Hat OpenShift Data Foundation^] （旧称 Red Hat OpenShift Container Storage）は、コンテナ向けのソフトウェア定義ストレージです。Red Hat OpenShift Data Foundation は、クラウドをまたいでアプリケーションを迅速かつ効率的に開発・デプロイできるようチームを支援します。
 
-* https://about.gitea.com/[Gitea^] is the SCM used to store and push application source code.
+* https://about.gitea.com/[Gitea^] は、アプリケーションのソースコードを保存し、プッシュするために使用する SCM（ソースコード管理）です。
 
-* https://docs.sonarsource.com/sonarqube/latest/[SonarQube^] is a tool for continuously inspecting the Code Quality and Security of an application source code.
+* https://docs.sonarsource.com/sonarqube/latest/[SonarQube^] は、アプリケーションのソースコードの品質とセキュリティを継続的に検査するためのツールです。
 
-* https://www.sonatype.com/products/sonatype-nexus-repository[Nexus^] as a central artifactory repository.
+* https://www.sonatype.com/products/sonatype-nexus-repository[Nexus^] は、中央のアーティファクトリ（成果物）リポジトリとして使用します。

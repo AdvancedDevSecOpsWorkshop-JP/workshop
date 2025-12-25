@@ -1,4 +1,4 @@
-* xref:index_ja.adoc[0. Introduction]
+* xref:index.adoc[0. Introduction]
 * xref:01-serverless.adoc[1. OpenShift as an Application Platform: Trusted - Comprehensive - Consistent]
 ** xref:01-serverless.adoc#introduction[Introduction]
 ** xref:01-serverless.adoc#openshift_as_an_application_platform_overview[OpenShift as an Application Platform Overview]
