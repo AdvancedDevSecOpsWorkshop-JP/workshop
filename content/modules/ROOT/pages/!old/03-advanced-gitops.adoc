@@ -1,0 +1,568 @@
+= Advanced OpenShift GitOps(30 mins)
+
+In this module we will review advanced GitOps topics that Platform teams must be
+familiar with and Developers should be aware of. Topics will include items like Argo CD Architecture, Command Line Interface,
+Role Based Access Controls (RBAC), AppProjects and Apps in Any Namespace.
+
+[#openshift-gitops-architecture]
+== OpenShift GitOps Architecture
+
+In this section we will do a brief overview of the OpenShift GitOps architecture which is depicted in the diagram below.
+
+image::gitops/argocd-architecture.png[]
+
+[NOTE]
+In the diagram above, everything contained within the dotted is running in OpenShift whereas outside the line are external
+dependencies or interactions.
+
+The OpenShift GitOps operator is used to deploy, manage and upgrade an installation of Argo CD which runs in a
+specified namespace. The Argo CD installation contains several components, running as individual deployments,
+which are as follows:
+
+1. *Application Controller*. This component is responsible for deploying Kubernetes resources and watching the resources for change,
+to do so it interacts with the Kubernetes API.
+2. *Repo Server*. This component manages access to the manifests via a git repository, it is responsible for
+fetching the manifests (i.e. yaml files). These manifests can be built from raw yaml, helm or kustomize but
+additional tools can be used via a plugin architecture. For improved performance, it caches these manifests
+in the redis component.
+3. *Server*. This provides the user interface as well as a REST API.
+4. *Dex (optional)*. Provides authentication via OpenShift OAuth2, in this workshop it is not used as we
+are authenticating directly against Keycloak.
+5. *ApplicationSet Controller (Not shown)*. This component is responsible for managing ApplicationSets which
+are used to generate Applications using generators. These generators can create Applications based on Pull Requests,
+directories in git, clusters, etc.
+
+[#workshop-architecture]
+== Workshop Architecture
+
+In this workshop, two GitOps instances have been deployed as follows:
+
+1. *Cluster GitOps*. This is used by the platform team to manage cluster configuration as well as
+cluster-scoped tenant resources (i.e. Namespaces, Quotas, NetworkPolicy, Operators, etc). It has cluster-admin
+level Kubernetes privileges in order to manage cluster configuration.
+
+2. *Shared GitOps*. This instance is used by application teams to deploy their applications. This is a shared
+GitOps environment with multiple application teams accessing it. As a result Argo CD Role Based Access Controls (RBAC) have been
+configured to manage access so that users from different teams cannot view or modify other teams applications. Additionally
+it has much less Kubernetes privileges then the Cluster GitOps instance possesses.
+
+=== Cluster GitOps
+
+By default the OpenShift GitOps operator will install an instance in the `openshift-gitops` namespace, this instance
+is cluster-scoped and users are encouraged to use this instance for cluster configuration including managing
+privileged resources on behalf of tenants (Namespaces, Quotas, Operators, etc).
+
+Lets have a brief look at this instance first, to do so access the OpenShift Application Menu and select the Cluster Argo CD
+item highlighted in red:
+
+image::gitops/openshift-app-menu-cluster-argocd.png[]
+
+This will take you to the Argo CD user interface for this instance, to login click the Keycloak button shown in red:
+
+image::gitops/argocd-keycloak-login.png[]
+
+Assuming you have already logged into OpenShift with Keycloak you will be automatically logged into Argo CD since
+we are using Keycloak to provide Single-Sign-On in this workshop. Once you are logged in you will see the following
+applications:
+
+image::gitops/argocd-cluster-users.png[]
+
+Notice how you can view all of the user projects (user1, user2, user3, etc), this is because we have used Argo CD RBAC
+to provide users in the `developers` group with limited access to the Argo CD Project that these applications are tied to.
+
+[NOTE]
+It is uncommon for developers to have any access to the cluster scoped instance which is typically managed by the platform
+team, we are providing it here for illustrative purposes. In situations where it is beneficial for high performing
+developer teams to have access typically that access would be limited to Applications that are specific
+to that team. (i.e. user1 could only see the user1 application, etc)
+
+Select the app for your particular user called `{user}`. Depending on the number of users attending the workshop there
+could be a lot of Applications, you can find your application by using the filter bar:
+
+image::gitops/argocd-filter.png[]
+
+Once you find the Application, click on it to view all of the resources that this Application deployed. This Application
+is provisioning all of the resources that a tenant, i.e. your user, requires on this cluster including namespaces, rolebindings,
+etc. These are the resources that the platform team, i.e. cluster-admins, need to provision for developer teams on the
+cluster.
+
+image::gitops/cluster-argocd-user-app.png[]
+
+You can view the groups associated with your logged in user by clicking on the user button.
+
+image::gitops/argocd-user-groups.png[]
+
+Note the `developers` group that is shown along with the user specific team, `teamX`, that your user is associated with. In our scenario user1 is on
+team 1, user2 on team2, etc. The `developers` group is a generic group that all of the application developers belong to.
+
+These groups are provisioned in Keycloak and made available to Argo CD when you logged into the application.
+
+In the next section we will review the Shared Argo CD instance and do a deeper dive afterwards on how Argo CD RBAC is configured
+to determine the access that users have to resources in Argo CD. For now know that you have very limited permissions
+on the Applications in the `Users` project as only Get and Sync permissions have been enabled.
+
+[NOTE]
+There is another Argo CD Project deployed here for cluster configuration for which the `developers` group has no
+permissions, If at the end of the workshop you would like to explore how the Workshop cluster was configured using GitOps
+you can ask the instructor to enable visibility.
+
+=== Shared GitOps
+
+The Shared GitOps instance is the multi-tenant Argo CD instance that developer teams, i.e. you,
+will interact with to deploy applications and resources. Compared to the
+Cluster GitOps instance it has much less privileges on the cluster to align with developer
+team responsibilities around deploying applications.
+
+[NOTE]
+While technically a single Argo CD instance can be used for both cluster configuration and developer deployments
+by leveraging Argo CD RBAC, it is recommended that these use cases be in separate instances to minimize the possibilities
+of privilege escalation. Privilege escalation can occur if there is a hole in the Argo CD RBAC configuration enabling
+a developer team member to leverage the higher kubernetes permissions a cluster configuration GitOps instance would have.
+
+Login into the Shared GitOps instance by using the link in the OpenShift application menu:
+
+image::gitops/openshift-app-menu-shared-argocd.png[]
+
+The login process is identical to the Cluster GitOps instance, click the Keycloak login button to complete the process. Once logged
+in a set of Applications will be displayed:
+
+image::gitops/shared-gitops-apps.png[]
+
+Note in the Shared GitOps, unlike the Cluster GitOps instance, you can only view Applications that are specific to your user.
+
+We have a `dev-tools` Application, along with the other applications deployed in the previous module, to deploy team specific
+Sonarqube and Nexus instances which will be used in the Pipelines
+module of this workshop. If you check with your neighbors, assuming they have reached this section, you will note that
+every person has their own dev-tools Application which is unique to that workshop user. How can we have an Application
+with the same name multiple times in the same Argo CD instance?
+
+To understand this, we are going to look at this and Argo CD RBAC in more depth in the subsequent sections.
+
+[#argocd-deep-dive]
+== Argo CD Deep Dive
+
+=== Argo CD CLI
+
+We wil use the ArgoCD CLI to explore the Shared GitOps in more detail. A secret has been pre-created in the `{user}-argocd`
+namespace called `argocd-cli` that provides the credentials needed to login into Argo CD.
+
+[NOTE]
+Normally when using Argo CD with OIDC the login would be done with using the `--sso` switch
+which starts up a local web server to handle the OIDC callback on localhost. However since
+our terminal is running in a pod in OpenShift this is not possible. Therefore a local account, `{user}-cli`, has been pre-created
+with identical permissions to the SSO user. Normally local accounts in Argo CD should only
+be used for automation not for users.
+
+To provision secret into the terminal as exported environment variables run the following
+commands:
+
+[.console-input]
+[source,sh,subs="attributes",role=execute]
+----
+export ARGOCD_AUTH_TOKEN=$(oc get secret argocd-cli -n {user}-argocd -o jsonpath="{.data.ARGOCD_AUTH_TOKEN}" | base64 -d)
+export ARGOCD_SERVER=$(oc get secret argocd-cli -n {user}-argocd -o jsonpath="{.data.ARGOCD_SERVER}" | base64 -d)
+export ARGOCD_USERNAME=$(oc get secret argocd-cli -n {user}-argocd -o jsonpath="{.data.ARGOCD_USERNAME}" | base64 -d)
+alias argocd='f(){ argocd "$@" --grpc-web;  unset -f f; }; f'
+----
+
+The Argo CD CLI will use the specified environment variables automatically and not require an explicit login. Additionally
+the alias command at the end will ensure that when the `argocd` is called the parameter `--grpc-web` is automatically added. Since
+we are routing commands through the OpenShift Route this parameter is needed to avoid superfluous warnings.
+
+[IMPORTANT]
+If you restart the terminal interface you may need to run the above commands again in order to access Argo CD
+from the command line.
+
+Test the variables are set by using the Argo CD CLI to view the Applications that were shown in the user interface:
+
+[.console-input]
+[source,sh,subs="attributes",role=execute]
+----
+argocd app list
+----
+
+The following output will be provided showing the application name, the sync and health status, the source and destination.
+
+[.console-output]
+[source,bash,subs="attributes+,+macros"]
+----
+NAME                    CLUSTER     NAMESPACE   PROJECT  STATUS  HEALTH   SYNCPOLICY  CONDITIONS  REPO                                                        PATH                              TARGET
+{user}-argocd/dev-tools  in-cluster  {user}-cicd  {user}    Synced  Healthy  Auto        <none>      https://github.com/AdvancedDevSecOpsWorkshop/bootstrap.git  infra/dev-tools/overlays/default  HEAD
+----
+
+A detailed view of the Application can be retrieved by using the `get` command:
+
+[.console-input]
+[source,sh,subs="attributes",role=execute]
+----
+argocd app get {user}-argocd/dev-tools
+----
+
+Various details of the Application are shown including a list of resources that the application is managing and their associated statuses.
+
+[.console-output]
+[source,bash,subs="attributes+,+macros"]
+----
+Name:               {user}-argocd/dev-tools
+Project:            {user}
+Server:             in-cluster
+Namespace:          {user}-cicd
+URL:                https://argocd-server-gitops.apps.cluster-wvcx7.sandbox1429.opentlc.com/applications/dev-tools
+Source:
+- Repo:             https://github.com/AdvancedDevSecOpsWorkshop/bootstrap.git
+  Target:           HEAD
+  Path:             infra/dev-tools/overlays/default
+SyncWindow:         Sync Allowed
+Sync Policy:        Automated
+Sync Status:        Synced to HEAD (482bc44)
+Health Status:      Healthy
+
+GROUP               KIND                   NAMESPACE    NAME                       STATUS  HEALTH   HOOK  MESSAGE
+                    Secret                 {user}-cicd   sonarqube-admin            Synced                 secret/sonarqube-admin created
+                    PersistentVolumeClaim  {user}-cicd   nexus                      Synced  Healthy        persistentvolumeclaim/nexus created
+                    PersistentVolumeClaim  {user}-cicd   sonarqube-data             Synced  Healthy        persistentvolumeclaim/sonarqube-data created
+                    PersistentVolumeClaim  {user}-cicd   postgresql-sonarqube-data  Synced  Healthy        persistentvolumeclaim/postgresql-sonarqube-data created
+                    Service                {user}-cicd   sonarqube                  Synced  Healthy        service/sonarqube created
+                    Service                {user}-cicd   nexus                      Synced  Healthy        service/nexus created
+                    Service                {user}-cicd   postgresql-sonarqube       Synced  Healthy        service/postgresql-sonarqube created
+apps                Deployment             {user}-cicd   nexus                      Synced  Healthy        deployment.apps/nexus created
+apps                Deployment             {user}-cicd   sonarqube                  Synced  Healthy        deployment.apps/sonarqube created
+batch               Job                    {user}-cicd   configure-nexus            Synced  Healthy        job.batch/configure-nexus created
+batch               Job                    {user}-cicd   configure-sonarqube        Synced  Healthy        job.batch/configure-sonarqube created
+route.openshift.io  Route                  {user}-cicd   nexus                      Synced  Healthy        route.route.openshift.io/nexus created
+apps.openshift.io   DeploymentConfig       {user}-cicd   postgresql-sonarqube       Synced  Healthy        deploymentconfig.apps.openshift.io/postgresql-sonarqube created
+route.openshift.io  Route                  {user}-cicd   sonarqube                  Synced  Healthy        route.route.openshift.io/sonarqube created
+----
+
+In addition to retrieving information about the Application, various tasks can be performed via the CLI including syncing, refreshing and modifying the Application. We
+will look at these in more depth in subsequent sections.
+
+=== Argo CD Projects
+
+Argo CD link:https://argo-cd.readthedocs.io/en/stable/user-guide/projects/[Projects,window='_blank'] are used to group Applications together as well as manage
+permissions to the Applications and other Project scoped resources. Keep in mind that an Argo CD Project is different then an OpenShift Project despite using
+the same terminology. An OpenShift Project is represented by `kind: Project` in Kubernetes whereas an Argo CD Project is represented by `kind: AppProject`.
+
+While every Application in Argo CD must be associated with a Project, they are particularly useful when managing a multi-tenant Argo CD as the Project not
+only determines the user permissions but can also restrict what Applications associated with the Project can do. As per the
+documentation, an Argo CD Project can:
+
+* restrict what may be deployed (trusted Git source repositories)
+* restrict where apps may be deployed to (destination clusters and namespaces)
+* restrict what kinds of objects may or may not be deployed (e.g. RBAC, CRDs, DaemonSets, NetworkPolicy etc...)
+* defining project roles to provide application RBAC (bound to OIDC groups and/or JWT tokens)
+
+[IMPORTANT]
+Argo CD includes a `default` project when it is installed, it is strongly recommended that this never be used and administrators create
+Projects as needed to support their specific use cases.
+
+In our Shared GitOps instance each workshop team, and thus user, has their own Project to manage access and restrictions for their Applications. To
+view your teams project, use the CLI to run the following command:
+
+[.console-input]
+[source,sh,subs="attributes",role=execute]
+----
+argocd proj list
+----
+
+Notice that a single project is listed:
+
+[.console-output]
+[source,bash,subs="attributes+,+macros"]
+----
+NAME   DESCRIPTION    DESTINATIONS    SOURCES  CLUSTER-RESOURCE-WHITELIST  NAMESPACE-RESOURCE-BLACKLIST  SIGNATURE-KEYS  ORPHANED-RESOURCES
+{user}  {user} project  5 destinations  *        <none>                      <none>                        <none>          disabled
+----
+
+A detailed view of the project is retrieved by using the `get` command:
+
+[.console-input]
+[source,sh,subs="attributes",role=execute]
+----
+argocd proj get {user}
+----
+
+[.console-output]
+[source,bash,subs="attributes+,+macros"]
+----
+Name:                        {user}
+Description:                 {user} project
+Destinations:                .{user}-argocd
+                             ,{user}-dev
+                             ,{user}-prod
+                             ,{user}-cicd
+Repositories:                *
+Scoped Repositories:         <none>
+Allowed Cluster Resources:   <none>
+Scoped Clusters:             <none>
+Denied Namespaced Resources: /Namespace
+                             /ResourceQuota
+                             /LimitRange
+                             operators.coreos.com/*
+                             operator.openshift.io/*
+                             storage.k8s.io/*
+                             machine.openshift.io/*
+                             machineconfiguration.openshift.io/*
+                             compliance.openshift.io/*
+Signature keys:              <none>
+Orphaned Resources:          disabled
+----
+
+Notice that your user's Applications are limited to deploying to a specific set of namespaces, the `{user}-*` namespaces.
+This limitation on destinations ensures that Applications in this Project cannot deploy resources to other namespaces
+even though the underlying Argo CD application-controller has permissions to do so.
+
+Also note that we are denying access to some types of resources. All cluster scoped resources, i.e. resources without a namespace,
+are denied. Also note that we are denying access to specific namespace scoped resources such as ResourceQuota and LimitRange because
+it is the purview of the platform team to manage these resources.
+
+Finally some Argo CD resources, such as clusters and repositories, can be scoped globally or at a Project level. Scoping resources
+at a Project level can be useful in cases where the Argo CD administrator would like to enable self-service
+for application teams. In this workshop these resources are defined globally however if you would like to learn
+more about this capability the Argo CD documentation covers this topic in depth.
+
+link:https://argo-cd.readthedocs.io/en/stable/user-guide/projects/#project-scoped-repositories-and-clusters[Project scoped Repositories and Clusters,window="_blank"]
+
+=== Role Based Access Control
+
+Argo CD has it's own Role Based Access Control (RBAC) that is separate and distinct from Kubernetes RBAC. When users interact
+with Argo CD via the Argo CD UI, CLI or API the Argo CD RBAC is enforced. If users interact with Argo CD resources directly
+using the OpenShift Console or `kubectl`/`oc` then only the Kubernetes RBAC is used.
+
+Additionally the application-controller in Argo CD, as shown previously in the GitOps Architecture, interacts with the
+Kubernetes API and is governed by Kubernetes RBAC. Argo CD can only deploy and manage the Kubernetes resources that
+the application-controller has been given permission to use in Kubernetes RBAC.
+
+This relationship is shown in the following diagram:
+
+image::gitops/argocd-rbac.png[]
+
+The Argo CD RBAC is implemented using the link:https://casbin.org/docs/overview[Casbin, window="_blank"] library. Permissions
+are defined by creating roles and then assigning those roles to groups, or individual users, as needed. Argo CD includes
+two roles out of the box:
+
+* role:readonly - provides read-only access to all resources
+* role:admin - allows unrestricted access to all resources
+
+Roles and permissions can be defined in two places, globally and on a per Project basis. It is strongly recommended that tenant
+roles and permissions be defined in the Project and global roles be reserved for Argo CD administrators and managing
+globally scoped resources.
+
+As a developer, i.e. user of the workshop, you do not have access to view the global configuration, however this is what is defined:
+
+[.console-output]
+[source,bash,subs="attributes+,+macros"]
+----
+  policy.csv: |
+    p, role:none, *, *, */*, deny
+    g, system:cluster-admins, role:admin
+    g, cluster-admins, role:admin
+    p, role:developers, clusters, get, *, allow
+    p, role:developers, repositories, get, *, allow
+    g, developers, role:developers
+  policy.default: role:none
+  scopes: '[accounts,groups,email]'
+----
+
+A few items to note about this global configuration:
+
+* The first section is policies where we define roles and matching groups
+** We are defining an explicit role, `role:none`, that denies all permissions.
+** Users in the `cluster-admins` group are assigned to the `admin` role.
+** We define a role for developers that grants read access to global resources like clusters and repositories.
+** We assign the `developers` role to the `developers` group.
+* Next the `policy.default` is set to `role:none` so that users are denied access to resources by default with permissions needing to be explicitly enabled.
+* Scopes are set to include accounts, groups and email. Argo CD uses OIDC for authentication and this
+matches OIDC link:https://openid.net/specs/openid-connect-core-1_0.html#ScopeClaims[scopes, window="_blank"], scopes selected
+here can be used to match groups in the policy section.
+
+[IMPORTANT]
+Any permissions given in the `policy:default` cannot be removed by additional roles using a `deny` permission hence why we
+set a role with no permissions.
+
+[NOTE]
+You can also set the `policy.default` to an empty string to accomplish
+the same effect as defining `role:none` however the author of this workshop personally prefers defining an explicit
+role to minimize possible confusion with regards to intent.
+
+Now let's look at the RBAC defined in the Project that has been setup for your team and user:
+
+[.console-input]
+[source,sh,subs="attributes",role=execute]
+----
+argocd proj role list {user}
+----
+
+[.console-output]
+[source,bash,subs="attributes+,+macros"]
+----
+ROLE-NAME  DESCRIPTION
+admin      TeamX admins
+pipeline   Pipeline accounts
+----
+
+This shows that two roles are defined, `admin` and `pipeline`. The `admin` role is intended for
+users who will administer Applications in this Project. The `pipeline` role is intended
+for automation tools and will be used by OpenShift Pipelines in a later module.
+
+Now look at how the roles are defined:
+
+[.console-input]
+[source,sh,subs="attributes",role=execute]
+----
+argocd proj role get {user} admin
+----
+
+[.console-output]
+[source,bash,subs="attributes+,+macros"]
+----
+Role Name:     admin
+Description:   TeamX admins
+Policies:
+p, proj:{user}:admin, projects, get, {user}, allow
+p, proj:{user}:admin, applications, *, {user}/*, allow
+p, proj:{user}:admin, exec, create, {user}/*, allow
+g, team1, proj:{user}:admin
+g, user1-cli, proj:{user}:admin
+p, proj:{user}:pipeline, projects, get, {user}, allow
+p, proj:{user}:pipeline, applications, get, {user}/*, allow
+p, proj:{user}:pipeline, applications, sync, {user}/*, allow
+g, {user}-pipeline, proj:{user}:pipeline
+----
+
+Here we can see information about the role including policies, let's break
+down the first policy into it's constituent parts to understand how it is defined.
+
+image::gitops/argocd-policy.png[]
+
+1. The letter `p` indicates that a policy is being defined, this is how we assign
+permissions to roles.
+2. Next is the role this policy will be part of. In this case
+it is the `admin` role which is scoped to Project `{user}`.
+3. Then the resource type for which we are giving permissions to, in this case `projects`. Various
+Argo CD resource types are supported including `applications`, `clusters`, and
+link:https://argo-cd.readthedocs.io/en/stable/operator-manual/rbac/#rbac-resources-and-actions[more, window="_blank"].
+4. After resource we define the actions for the policy, in this case a single action of `get`. Many
+different link:https://argo-cd.readthedocs.io/en/stable/operator-manual/rbac/#rbac-resources-and-actions[actions, window="_blank"]
+are available. A wildcard of `*` can be used which indicates all actions.
+5. Next is the specific Argo CD resource, this can be a wildcard like `*` for all resources or a named resource such as `{user}` in this case
+indicating the `{user}` Project. For resources like Applications that are scoped to Projects a notation of
+`<Project>/<Application>` can be used as shown in subsequent lines.
+6. Finally whether we `allow` or `deny` the permission.
+
+Once we have defined our role via policies we can then assign the policy to a group, this is indicated
+by a `g` at the start of the line. For example, the line `g, teamX, proj:{user}:admin` indicates we
+are assigning the project scoped role `admin` to the group `teamX`.
+
+Note that what is considered a `group` for matching purposes is controlled by the `scope` that was
+reviewed earlier. While `groups` is the most commonly set scope, having scopes like `email`
+allows you to match roles to individual users. In a nutshell, when adding additional scopes, like `email`, these
+are treated as groups by Argo CD for matching purposes.
+
+As discussed, the ability to view this basic project has been granted but
+not to modify or delete it. To confirm that, try deleting the Project:
+
+[.console-input]
+[source,sh,subs="attributes",role=execute]
+----
+argocd proj delete {user}
+----
+
+[.console-output]
+[source,bash,subs="attributes+,+macros"]
+----
+FATA[0000] rpc error: code = PermissionDenied desc = permission denied: projects, delete, user1, sub: user1-cli, iat: 2024-07-30T17:14:43Z
+----
+
+As expected we were denied permission to delete the Project. Again as a reminder the Argo RBAC is only used when you interact with
+Argo CD via its UI or CLI. If you have permissions on the `AppProject` kind in the Argo CD namespace you could delete the resource
+with `oc delete appproject {user} -n gitops` and the Argo CD RBAC would never be checked,
+
+This inability to let users interact with resources in the Argo CD namespace is a challenge when you want to give users the ability to
+declaratively manage Applications instead of managing them imperatively via the UI or CLI, fortunately
+Argo CD has you covered as we will see in the next module.
+
+=== Apps in Any Namespace
+
+You may have noticed a subtle difference between the Cluster and Shared instancs of GitOps in that
+the Application names in the shared instance are prefixed with a namespace where as the Cluster Applications
+are not.
+
+Run the following command again:
+
+[.console-input]
+[source,sh,subs="attributes",role=execute]
+----
+argocd app list
+----
+
+The following output will be provided, notice that the Application name consists of two parts using the format `<Namespace>/<Application Name>`:
+
+[.console-output]
+[source,bash,subs="attributes+,+macros"]
+----
+NAME                    CLUSTER     NAMESPACE   PROJECT  STATUS  HEALTH   SYNCPOLICY  CONDITIONS  REPO                                                        PATH                              TARGET
+{user}-argocd/dev-tools  in-cluster  {user}-cicd  {user}    Synced  Healthy  Auto        <none>      https://github.com/AdvancedDevSecOpsWorkshop/bootstrap.git  infra/dev-tools/overlays/default  HEAD
+----
+
+The reason why is that we are using the link:https://argo-cd.readthedocs.io/en/stable/operator-manual/app-any-namespace[Apps in Any Namespace,window='_blank'] feature. Traditionally,
+Argo CD requires that Application resources be in the same namespace as the Argo CD installation. Apps in Any Namespace allow applications to exist in other
+namespaces and provides a mechanism to isolate team's Applications in a multi-tenant Argo CD instance.
+
+This addresses an important limitation of having all Applications in the same namespace where users cannot be allowed to declaratively manage their Application resources. If they were permitted to do so, they
+could easily bypass the security provided by Argo CD Projects simply by assigning any Project to the Application by creating or modifying it using Kubernetes APIs (i.e. oc apply, oc edit).
+This problem arises because Argo CD RBAC is only enforced when using the Argo UI or CLI, it is not enforced by Kubernetes.
+
+The Apps in Any Namespace feature avoids this issue by requiring the platform team to bind a specific Argo CD Project to each specific namespace
+where Applications reside. In this workshop this means the `user1-argocd` namespace is automatically bound to Project `user1`, `user2-argocd` namespace to `user2`, etc.
+
+The namespace being included as part of the Application name is a subtle indication that Apps in Any Namespace is being used
+
+To configure Apps in Any Namespace there are two places where the source namespaces for Applications must be configurd. The
+first is as a startup parameter for the Argo CD instance, with the OpenShift GitOps operator this is determined by the `sourceNamespaces`
+field in the ArgoCD CR. Use the following command to see additional information about the field:
+
+[.console-input]
+[source,sh,subs="attributes",role=execute]
+----
+oc explain argocd.spec.sourceNamespaces
+----
+
+[.console-output]
+[source,bash,subs="attributes+,+macros"]
+----
+GROUP:      argoproj.io
+KIND:       ArgoCD
+VERSION:    v1beta1
+
+FIELD: sourceNamespaces <[]string>
+
+DESCRIPTION:
+    SourceNamespaces defines the namespaces application resources are allowed to
+    be created in
+----
+
+This field takes an array of namespaces however wildcards can be used to reduce management effort. It is highly
+recommended when using Apps in Any Namespace to select a consistent naming pattern for these namespaces that
+is amenable to wildcards.
+
+[NOTE]
+The intent of this recommendation is so that this field can be set once and not need to be constantly
+updated as new tenants and users are on-boarded into the Shared instance. For example, avoid using
+`*-gitops` as your naming convention since this wildcard would also pickup the `openshift-gitops`
+namespace.
+
+The second place to configure `sourceNamespaces` is in the Argo CD Project. This determines which
+namespaces, and correspondingly the Applications in that namespace, are associated with which Project.
+This ensures that when a user creates or modifies an Application in namespace X that it is always
+associated with Project Y even if the user tries to bypass security and select a different Project.
+
+At the moment the Argo CD CLI does not support displaying the sourceNamespaces however they can be
+viewed in the UI. Switch to the Argo CD UI and navigate to "Settings > Projects" and select
+project {user}. You should see the sourceNamespaces defined as follows:
+
+image::gitops/argocd-appproject-sourcenamespaces.png[]
+
+[NOTE]
+We have also enabled the ApplicationSet in Any Namespace feature as well however be
+aware that this feature is considered Technical Preview in OpenShift GitOps.

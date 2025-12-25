@@ -1,89 +1,84 @@
 = OpenShift as An Application Platform: Trusted - Comprehensive - Consistent(45 mins)
 
-このモジュールでは、OpenShift をアプリケーション・プラットフォームとして包括的に理解します。
-モダナイゼーションから、オープン・ハイブリッドクラウド上でのアプリケーションのビルド／デプロイ／管理、さらに Serverless による自動スケーリングまで、日々の作業を加速させるためのポイントを学びます。
+This module will give you a comprehensive understanding of OpenShift as an Application Platform that can accelerate their day-to-day activities, from modernization to build, deploy, manage, and auto-scale your applications with serverless in the open hybrid cloud.
 
 [#introduction]
 == Introduction
 
-このモジュールでは、以下を行います。
+In this module you will:
 
-* OpenShift のアプリケーションプラットフォームとしての機能を確認します。
-* Developer Perspective を使い、Deployment と Serverless の2種類で、2つのアプリケーションを OpenShift に移行します。
-* Serverless Deployments と OpenShift Pipelines について学びます。
-* アプリケーションの状態、CPU 使用率、イベントを確認します。
+* Review the OpenShift as an Application Platform capabilities.
+* Migrate two applications to OpenShift using the Developer Perspective using Deployment and Serverless types.
+* Learn about Serverless Deployments and OpenShift Pipelines
+* Explore application status, cpu usage and events
 
 [#openshift_as_an_application_platform_overview]
 == OpenShift as an Application Platform Overview
 
-*Red Hat OpenShift* は、オープンスタンダードに基づいた、 *“信頼性・包括的・一貫性”* を備えたアプリケーション・プラットフォームであり、
-レガシーアプリケーションからクラウドネイティブアプリケーションまで、開発・提供・実行を成功させるための重要な機能を備えています。
+*Red Hat OpenShift* is a *trusted, comprehensive, consistent application platform* based on open standards with key capabilities that help you successfully develop,deliver and run legacy and cloud-native applications.
+
 
 image::ocp-app/devops_01_ocpapp_platform.png[width=100%]
-図1. アプリケーションプラットフォームとしてのOpenShiftの概要
+Fig 1. The image shows an Overview of OpenShift as an Application Platform.
 
-* *Red Hat Enterprise Linux* の *信頼性の高い基盤* の上に構築された *Red Hat OpenShift* は、オンプレミスのインフラ、パブリッククラウドのリソース、エッジデバイスを含むハイブリッドクラウド環境全体で、柔軟でスケーラブルなモダンアプリケーション開発の基盤を提供します。
+* Built on the *trusted* foundation of *Red Hat Enterprise Linux*, *Red Hat OpenShift* provides a flexible, scalable foundation for modern application development across hybrid cloud environments—including onsite infrastructure, public cloud resources, and edge devices.
 
-* *Red Hat OpenShift* は、さまざまな環境にまたがるセキュアでスケーラブルな開発を効率化する *包括的なアプリケーションプラットフォーム* を提供します。モダナイゼーションやデプロイに伴う課題に対応し、豊富なツールとサービスにより、開発者の生産性と運用効率を高めます。
+* *Red Hat OpenShift* provides a *comprehensive application platform* that helps streamline secure, scalable development across varied environments, addressing modernization and deployment hurdles and boosting developer productivity and operational efficiency with extensive tooling and services.
 
-* *Red Hat OpenShift* は、開発者・運用担当者・プラットフォームエンジニアに対して、*一貫性のあるユーザー体験* を提供します。オンプレミス、パブリッククラウド、エッジ、ハイブリッドインフラのいずれであっても、好きなツールを使って、どこにでも迅速にアプリをビルド／デプロイできる自由を提供します。
-
-
-== OpenShift console から Application Platform としての OpenShift を確認する
-
-このセクションでは、*Image Build*、*Runtimes*、*Serverless*、*CI/CD* など、これまでに触れた機能の一部を実際に確認していきます。
-
-*Red Hat OpenShift* では、*Developer perspective* を使ってアプリケーションおよび関連するコンポーネント／サービスを作成し、それらがどのように連携して動くかを定義し、時間の経過とともに健全性を監視できます。
+* *Red Hat OpenShift* gives developers, operations and platform engineers a single, *consistent* user experience and the freedom to quickly build and deploy apps anywhere using the tools they want anywhere, whether they are on-premise, on a public cloud, at the edge, or using a hybrid infrastructure.
 
 
-=== UBI Images を利用する
+== Exploring OpenShift as an Application Platform from the OpenShift console
 
-Red Hat Universal Base Images（UBI）は、OCI 準拠のコンテナ用ベース OS イメージであり、補完的なランタイム言語やパッケージを含み、自由に再配布できます。
-https://www.redhat.com/ja/blog/introducing-red-hat-universal-base-image[Red Hat Universal Base Image の (再) 紹介^]
+In this section we will explore some of the capabilities discussed such as *Image Build*, *Runtimes*, *Serverless* and *CI/CD*.
 
-Developer perspective では、OpenShift 上でビルドおよびデプロイする新規アプリケーションのベースイメージとして、UBI イメージを選択できます。
+*Red Hat OpenShift* allows you to use the *Developer perspective* to build applications and associated components and services, define how they work together, and monitor their health over time.
 
 
-=== *Serverless を利用する*
-Serverless のクラウドコンピューティングモデルは、ハイブリッドクラウド向けに、モダンでクラウドネイティブなアプリ開発スタックを開発者に提供します。
-Serverless により、開発者はインフラを気にすることなくコードに集中できます。
-Red Hat® OpenShift® Serverless は、単一ベンダーへのロックインを避け、マルチクラウドのアプローチを可能にします。
-オープンソースの *Knative project* をベースとする *Red Hat OpenShift Serverless* は、イベント駆動のクラウドネイティブアプリを、シンプルかつ効率的にスケール可能な形で開発するための “橋渡し” となります。
-*Knative* には主に *Knative Serving* と *Knative Eventing* の2つのコンポーネントがあります。
+=== Working with UBI Images
 
-=== *Serverless のメリット*
+Red Hat Universal Base Images (UBI) are OCI-compliant container base operating system images with complementary runtime languages and packages that are freely redistributable. https://www.redhat.com/en/blog/introducing-red-hat-universal-base-image[(Re)Introducing the Red Hat Universal Base Image^]
 
-- クラウドネイティブ開発の簡素化
-- 自動スケーリング
-- マルチクラウドでの可搬性
-- 幅広い統合性
-- 組み込みのセキュリティ
-- エンタープライズグレードのアプリケーション・プラットフォーム
+The Developer perspective allows you to select a UBI image to be used as a base image for the new applications that will be built and deployed in OpenShift.
+
+
+=== *Working with Serverless*
+The serverless cloud computing model provides developers with a modern, cloud-native app dev stack for hybrid clouds. Serverless lets developers focus on their code without worrying about the infrastructure. Red Hat® OpenShift® Serverless allows you to avoid being locked into a single vendor and enables a multicloud approach.  *Red Hat OpenShift Serverless*, based on the open-source *Knative project*, is your bridge to streamlined, efficient, and scalable event-driven cloud-native app development. *Knative* has two main components *Knative Serving* and *Knative Eventing*.
+
+=== *Benefits of Serverless*
+
+- Simplified cloud native development
+- Automatic scaling
+- Multi-cloud portability
+- Comprehensive integration
+- Built-in security
+- Enterprise-grade application platform
+
 
 === *Knative Eventing*
 
 image::ocp-app/serverless_types.png[width=100%]
 
 
-* https://docs.openshift.com/serverless/latest/about/about-knative-serving.html[Knative Serving^] を使うと、クラスター上に Knative service や function を作成できます。また、アプリケーション向けの自動スケーリングやネットワーク設定など、追加の機能も利用できます。
+* https://docs.openshift.com/serverless/latest/about/about-knative-serving.html[Knative Serving^] allows you to create Knative services and functions on your cluster. It also allows you to use additional functionality such as autoscaling and networking options for your applications.
 
-* https://docs.openshift.com/serverless/latest/about/about-knative-eventing.html[Knative Eventing^] を使うと、event source、broker、channel などの Knative コンポーネントを作成し、それらを用いてアプリケーションや外部システムにイベントを送信できます。
+* With https://docs.openshift.com/serverless/latest/about/about-knative-eventing.html[Knative Eventing^] you can create Knative components such as event sources, brokers, and channels and then use them to send events to applications or external systems.
 
 === *Knative Serving*
 
 image::ocp-app/serverless_serving.png[width=100%]
 
-== OpenShift Web Console を使ってアプリケーションをモダナイズする
+== Modernize applications using OpenShift Web Console
 
-=== アプリケーションの概要
+=== Application Overview
 
-- *Web NodeJS*: 最近作成したアプリケーションで、ユーザーが coolstore と対話するための UI を提供します。
-- *Gateway-vertx*: UI と、その他のアプリケーションサービス群の間を中継するゲートウェイとして動作する Java アプリケーションです。
-- *Inventory*: Quarkus で構築された Java ベースのアプリケーションで、各商品の在庫情報を提供します。UI では、商品ごとの利用可能数量として表示されます。
-- *Catalog*: Spring Boot で構築された Java ベースのアプリケーションで、カタログ情報全体を提供します。このサービスがないと、UI 上にカタログデータは表示されません。
+- *Web NodeJS*: The application recently created is the UI enabling users to interact with the coolstore.
+- *Gateway-vertx*: A Java application that works as a gateway between the UI and the rest of the application services.
+- *Inventory*: A Java-based application built with Quarkus that provides the inventory information for each specific product. The data is shown in the UI as to how much quantity is available on each product.
+- *Catalog*: A Java-based application built with Spring Boot to provide all the catalog information. The catalog data will not be visible in the UI without this service.
 
 image::ocp-app/coolstore_diagram.png[width=80%]
-coolstore のマイクロサービス群を構成する最終的なトポロジー（Topology）表示のイメージ
+Image showing the final topology view that makes the coolstore microservices
 
 [#building_a_serverless_application_with_the_openshift_application_platform]
 == Building a Serverless application with the OpenShift Application Platform

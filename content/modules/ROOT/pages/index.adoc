@@ -1,4 +1,4 @@
-= OpenShift DevSecOps Roadshowへようこそ（10分）
+= Welcome to OpenShift DevSecOps Roadshow (10 minutes)
 :page-layout: home
 :!sectids:
 
@@ -9,7 +9,7 @@
 
 == 2. 主なポイント（Key Takeaways）
 
-* *Red Hat OpenShift* を *“信頼性・網羅性・一貫性”* を備えたアプリケーション・プラットフォームとして最大限に活用する方法を学ぶ。
+* *Red Hat OpenShift* を *“信頼性・包括的・一貫性”* を備えたアプリケーション・プラットフォームとして最大限に活用する方法を学ぶ。
 * *OpenShift Pipelines* を使った *CI/CD* パイプラインを深掘りします。
 * *OpenShift GitOps* と *Trusted Software Supply Chain* を活用し、セキュアに *DevSecOps* のベストプラクティスを採用します。
 
@@ -23,7 +23,7 @@
 === 3.1 テクノロジーフロー図
 
 image::intro/devops_env_architecture.png[width=100%]
-図 1. この図は、テクノロジースタックとそれらの相互連携を示しています。
+図1. テクノロジースタックとそれらの相互連携を示す
 
 === 3.2 テクノロジースタック
 
