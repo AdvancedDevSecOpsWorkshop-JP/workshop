@@ -200,11 +200,8 @@ oc -n {user}-dev scale deploy inventory-quarkus --replicas=2
 pod が作成され始めますが、すぐに削除されることがわかります。
 これは、OpenShift GitOps が inventory-quarkus deployment の application manifest に指定されたとおり、replicas 数を 1 に自動的に戻しているためです。
 
-You can set up Argo CD to automatically correct drift by setting the `selfHeal`
-property of the `Application` manifest to do so. Using the example from link:#_deploy_the_application[above]:
-
 Argo CD では、`Application` マニフェストの `selfHeal` プロパティを設定することで、drift を自動修正するよう構成できます。
-link:#_deploy_the_application[上の例] では次のとおりです。
+link:#_deploy_application_with_manifests[上の例] では次のとおりです。
 
 [.console-input]
 [source,yaml,subs="attributes+,+macros"]
@@ -263,10 +260,10 @@ Argo CD にはさまざまな generator が用意されており、Plugin アー
 利用可能な link:https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators[generators,window="_blank"] にはいくつか種類があり、代表例は次のとおりです。
 
 * link:https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-List[List,window="_blank"] generator を使い、環境ごとのアプリケーションを生成する（この後すぐ例を見ます）
-* link:https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-Git/[git,window="_blank"] generator を使い、git リポジトリの内容に基づいて Application を作成する（Module 4 で、環境向けアプリをより動的に生成する方法として扱います）
+* link:https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-Git/[Git,window="_blank"] generator を使い、git リポジトリの内容に基づいて Application を作成する（Module 4 で、環境向けアプリをより動的に生成する方法として扱います）
 * https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-Pull-Request/[Pull Request,window="_blank"] generator を使い、マージ前の自動テストのために、その場で新しい環境をプロビジョニングする
 * link:https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-Cluster/[Cluster,window="_blank"] generator を使い、複数クラスターにまたがって Application をプロビジョニングする
-* link:https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-Matrix[Matrix,window="_blank"] と link:https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-Merge[Merge,window="_blank"] を使い、複数 generator の結果を組み合わせる
+* link:https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-Matrix[Matrix,window="_blank"] と link:https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-Merge[Merge,window="_blank"] generator を使い、複数 generator の結果を組み合わせる
 
 それでは、List generator を使って、先ほどデプロイした `coolstore-app` の development／production 向け Applications を作成するシンプルな例を見てみましょう。
 
@@ -361,7 +358,7 @@ oc get app coolstore-app-dev -o=jsonpath='{.metadata.ownerReferences}' -n {user}
 == Helm
 include::_attributes.adoc[]
 
-link:https://helm.sh/[Helm] は、Kubernetes でコンテナ化アプリケーションのパッケージ化とデプロイを標準化・簡素化する、パッケージ／インストール管理ツールです。
+link:https://helm.sh/[Helm,window="_blank"] は、Kubernetes でコンテナ化アプリケーションのパッケージ化とデプロイを標準化・簡素化する、パッケージ／インストール管理ツールです。
 パッチ適用アプローチの Kustomize と異なり、Helm はテンプレート化を用いて、必要に応じてデプロイされる manifests を調整できるようにします。
 
 [#exploring-helm]
@@ -428,7 +425,7 @@ cd ~/workshop/content/modules/ROOT/files/gitops/helm/globex-ui
 include::ROOT:example$globex-ui/Chart.yaml[]
 ----
 
-このファイルは link:https://helm.sh/docs/topics/charts/#the-chartyaml-file[chart definition] であり、chart の名前、バージョン、その他の特性を定義します。
+このファイルは link:https://helm.sh/docs/topics/charts/#the-chartyaml-file[chart definition,window="_blank"] であり、chart の名前、バージョン、その他の特性を定義します。
 
 .link:https://github.com/AdvancedDevSecOpsWorkshop/workshop/blob/main/content/modules/ROOT/files/gitops/helm/globex-ui/values.yaml[values.yaml,window='_blank']
 [source,yaml,subs="+macros,attributes+"]
@@ -533,7 +530,7 @@ cat ~/workshop/content/modules/ROOT/examples/pipeline-helm-app.yaml
 
 以下の出力が表示されます。
 
-.link:https://github.com/AdvancedDevSecOpsWorkshop/workshop/blob/main/documentation/modules/ROOT/examples/pipeline-helm-app.yaml[pipeline-helm-app.yaml,window='_blank']
+.link:https://github.com/AdvancedDevSecOpsWorkshop/workshop/blob/main/content/modules/ROOT/examples/pipeline-helm-app.yaml[pipeline-helm-app.yaml,window='_blank']
 [source,yaml,subs="+macros,attributes+"]
 ----
 include::ROOT:example$pipeline-helm-app.yaml[]
@@ -620,7 +617,7 @@ ArgoCD でカスタム values ファイル付きの Helm chart をデプロイ�
 cat ~/workshop/content/modules/ROOT/examples/pipeline-helm-app-para.yaml
 ----
 
-.link:https://github.com/OpenShiftDemos/openshift-gitops-workshop/blob/main/documentation/modules/ROOT/examples/bgd-app-helm-para.yaml[bgd-app-helm-para.yaml,window='_blank']
+.link:https://github.com/OpenShiftDemos/openshift-gitops-workshop/blob/main/content/modules/ROOT/examples/bgd-app-helm-para.yaml[bgd-app-helm-para.yaml,window='_blank']
 [source,yaml,subs="+macros,attributes+"]
 ----
 include::ROOT:example$pipeline-helm-app-para.yaml[]
