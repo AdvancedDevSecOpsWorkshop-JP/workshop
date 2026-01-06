@@ -1,45 +1,42 @@
 = The Power of GitOps with OpenShift GitOps(60 mins)
 
-In this module you will understand how GitOps is used to manage cluster configuration and application deployments. This module
-assumes you have some familiarity with Argo CD.
+このモジュールでは、GitOps がクラスター構成とアプリケーションのデプロイを管理するためにどのように使われるかを理解します。
+本モジュールは、Argo CD についてある程度の知識があることを前提としています。
 
 [#introduction]
 == Introduction
 
-In this module we will deploy the Coolstore Application followed by the Pipeline using a GitOps methodology.
+このモジュールでは、GitOps の手法を用いて Coolstore Application をデプロイし、その後 Pipeline もデプロイします。
 
-GitOps is the process that is used to deploy and manage cluster configuration and application deployments. In GitOps, git
-is the source of truth and the GitOps engine, OpenShift GitOps, reconciles what is stored in git with the state of the cluster.
-This process is two-way, changes to git can be automatically reconciled to the cluster and direct, manual changes in the cluster
-can be automatically reverted back to what is in git.
+GitOps は、クラスター構成とアプリケーションデプロイをデプロイ／管理するためのプロセスです。
+GitOps では git が “source of truth（正）” となり、GitOps エンジンである OpenShift GitOps が、git に保存されている内容とクラスターの状態を突き合わせて整合（reconcile）します。
 
-In this way GitOps provides a powerful way to manage state in Kubernetes clusters while addressing common issues like
-configuration drift, change management and auditing.
+このプロセスは双方向です。
+git への変更は自動的にクラスターへ反映（reconcile）され、逆にクラスター上での直接・手動の変更も、git にある定義へ自動的に差し戻される（revert）可能性があります。
 
-OpenShift GitOps is included with a standard OpenShift or OpenShift Platform Plus subscription, it provides a fully supported GitOps engine
-using the upstream link:https://argoproj.github.io/cd[Argo CD,window='_blank'] project. Argo CD is a popular
-GitOps engine for Kubernetes that provides a variety of features to manage a GitOps environment including
-the engine, a comprehensive user interface, etc.
+このように GitOps は、configuration drift（構成のずれ）、変更管理、監査（auditing）といった一般的な課題に対応しつつ、Kubernetes クラスターの状態（state）を強力に管理する方法を提供します。
+
+OpenShift GitOps は、標準の OpenShift または OpenShift Platform Plus のサブスクリプションに含まれており、
+upstream の link:https://argoproj.github.io/cd[Argo CD,window='_blank'] プロジェクトを用いた、フルサポートの GitOps エンジンを提供します。
+Argo CD は Kubernetes 向けの代表的な GitOps エンジンで、エンジン本体に加え、包括的なユーザーインターフェースなど、GitOps 環境を管理するためのさまざまな機能を提供します。
 
 [#deploying-application]
 == Deploying Coolstore Application
 
-In this section we will cover the basics of deploying an application with argocd using manifests in a git repository.
+このセクションでは、git リポジトリ内の manifests を使って、argocd によりアプリケーションをデプロイする基本を扱います。
 
-We will deploy the same coolstore application as previously, but this time we will do that using a GitOps approach.
+以前と同じ coolstore application をデプロイしますが、今回は GitOps アプローチで実施します。
 
-We want to deploy that application to two namespaces: a "development" environment and a production environment, that we will later on update using the DevSecOps pipeline.
+このアプリケーションは2つの namespace にデプロイします。1つは "development" 環境、もう1つは "production" 環境です。これらは後ほど DevSecOps pipeline を使って更新していきます。
 
 === Deploy Application with Manifests
 
-A managed collection of manifests is known as an `Application` within Argo CD.
-Therefore, you must define it as such using an
-link:https://argo-cd.readthedocs.io/en/stable/operator-manual/declarative-setup/#applications[Application
-CRD (CustomResourceDefinition)^] in order to have Argo CD apply these manifests in your
-cluster.
+管理対象となる manifests の集合は、Argo CD では Application と呼ばれます。
+したがって、Argo CD にクラスターへ適用させるためには、link:https://argo-cd.readthedocs.io/en/stable/operator-manual/declarative-setup/#applications[Application
+CRD (CustomResourceDefinition)^] を使って Application として定義する必要があります。
 
-Let's review the `Application` manifest used to deploy this application (found link:https://github.com/AdvancedDevSecOpsWorkshop/workshop/blob/main/content/modules/ROOT/examples/coolstore-gitops-dev.yaml[here,window="_blank"])
-and break this down a bit:
+それでは、このアプリケーションをデプロイするために使用する Application マニフェスト を確認し、内容を整理してみましょう。
+（link:https://github.com/AdvancedDevSecOpsWorkshop/workshop/blob/main/content/modules/ROOT/examples/coolstore-gitops-dev.yaml[Application マニフェスト,window="_blank"]）
 
 .link:https://github.com/AdvancedDevSecOpsWorkshop/workshop/blob/main/content/modules/ROOT/examples/coolstore-gitops-dev.yaml[coolstore-gitops-dev.yaml,window="_blank"]
 [source,yaml,subs="+macros,attributes+"]
@@ -62,27 +59,20 @@ spec:
       prune: true
       selfHeal: true
 ----
-<1> The destination server is API endpoint for the cluster where Argo CD is
-  running -- in this case, using the locally-resolvable URL for the cluster
-<2> Here you're installing the application in Argo CD's `default` project
-  (`.spec.project`).
+<1> destination server は、Argo CD が稼働しているクラスターの API エンドポイントです（この例では、クラスター向けにローカル解決可能な URL を使用しています）
+<2> ここでは、アプリケーションを Argo CD の `default` project（`.spec.project`）にインストールしています。
 [NOTE]
-Argo CD's concept of a `Project` is different than OpenShift's. Here you're
-installing the application in Argo CD's `default` project (`.spec.project`).
-*NOT* OpenShift's default project.
-<3> The manifest repo, and the path within it where the YAML resides.
-<4> The `syncPolicy` is set to `automated` with prune and selfHeal enabled.
-  Prune will automatically remove resources that have been removed from the Git
-  repo, selfHeal will automatically correct resources that deviate from the
-  definition stored in the repo, i.e manual changes made using `oc` or `kubectl`
-  will be "healed".
+Argo CD の `Project` の概念は OpenShift のものとは異なります。ここで指定しているのは Argo CD の `default` project（`.spec.project`）であり、OpenShift の default project では *ありません*。
+<3> マニフェストのリポジトリと、その中で YAML が配置されているパスです。
+<4> `syncPolicy` は `automated` に設定され、prune と selfHeal が有効になっています。
+  Prune は Git リポジトリから削除されたリソースを自動削除します。selfHeal は、リポジトリに保存されている定義から逸脱したリソースを自動的に修正します。
+  たとえば `oc` や `kubectl` で行った手動変更は自動的に “修復（heal）” されます。
 
-OpenShift GitOps monitors your dedicated namespace {user}-argocd, where creating a resource of type *Application* creates an application in OpenShift GitOps.
+OpenShift GitOps は専用の namespace {user}-argocd を監視しており、そこで *Application* タイプのリソースを作成すると、OpenShift GitOps 上にアプリケーションが作成されます。
 
-You will create an Application by slightly modifying the provided example inline
-using the command below.
+以下のコマンドを使い、提供されている例を少しだけ変更して Application を作成します。
 
-Before deploying the application, ensure you are in your user's home directory:
+デプロイの前に、ユーザーのホームディレクトリにいることを確認してください。
 
 [.console-input]
 [source,bash,subs="attributes+,+macros"]
@@ -90,7 +80,7 @@ Before deploying the application, ensure you are in your user's home directory:
 cd ~
 ----
 
-Now let's first deploy the application to the {user}-dev environment:
+まずは {user}-dev 環境にアプリケーションをデプロイします。
 
 [.console-input]
 [source,bash,subs="attributes+,+macros"]
@@ -98,7 +88,7 @@ Now let's first deploy the application to the {user}-dev environment:
 sed 's/$USER/{user}/' ~/workshop/content/modules/ROOT/examples/coolstore-gitops-dev.yaml | sed 's/$SUBDOMAIN/{subdomain}/' | oc apply -n {user}-argocd -f -
 ----
 
-Let's then deploy the application to the {user}-prod environment:
+次に {user}-prod 環境にアプリケーションをデプロイします。
 
 [.console-input]
 [source,bash,subs="attributes+,+macros"]
@@ -106,36 +96,34 @@ Let's then deploy the application to the {user}-prod environment:
 sed 's/$USER/{user}/' ~/workshop/content/modules/ROOT/examples/coolstore-gitops-prod.yaml | sed 's/$SUBDOMAIN/{subdomain}/' | oc apply -n {user}-argocd -f -
 ----
 
-Now let's login to OpenShift GitOps using this URL:
+次の URL から OpenShift GitOps にログインします。
 
 link:https://argocd-server-gitops.{openshift_cluster_ingress_domain}[https://argocd-server-gitops.{openshift_cluster_ingress_domain},window="_blank"]
 
-You can also find the links by clicking on the mosaic icon on the top-right of the openshift console:
+OpenShift コンソール右上のモザイクアイコンをクリックしてもリンクを見つけられます。
 
 image::devsecops/mosaic-links.png[ConsoleLinks]
 
-To login click the Keycloak button shown in red:
+ログインするには、赤枠で示された Keycloak ボタンをクリックしてください。
 
 image::gitops/argocd-keycloak-login.png[]
 
-Assuming you have already logged into OpenShift with Keycloak you will be automatically logged into Argo CD since
-we are using Keycloak to provide Single-Sign-On in this workshop.
+このワークショップでは Keycloak による Single-Sign-On を使用しているため、すでに Keycloak で OpenShift にログイン済みであれば、Argo CD にも自動的にログインされます。
 
 [NOTE]
-If you need to login again, remember your credentials are *{user}*/*{password}*.
+もし再ログインが必要な場合は、認証情報は *{user}*/*{password}* を入力してください。
 
-The newly created Applications appears as a tile with the titles `coolstore-app-dev` and `coolstore-app-prod` in the
-Argo CD UI.
+新しく作成した Applications は、Argo CD UI 上で `coolstore-app-dev` と `coolstore-app-prod` というタイトルのタイルとして表示されます。
 
 image::devsecops/coolstore-app.png[SampleApp]
 
-Clicking on this tile takes you to the application details page. You may see it
-as still progressing or fully synced.
+このタイルをクリックすると、アプリケーションの詳細ページに遷移します。
+まだ処理中（progressing）として表示される場合もあれば、すでに fully synced と表示される場合もあります。
 
 image::gitops-apps/coolstore-app2.png[SampleApp]
 
-At this point the application should be up and running. Verify that the
-resources were created by running this command in the right-side terminal:
+この時点でアプリケーションは起動しているはずです。
+右側のターミナルで次のコマンドを実行し、リソースが作成されていることを確認します。
 
 [.console-input]
 [source,bash,subs="attributes+,+macros"]
@@ -143,7 +131,7 @@ resources were created by running this command in the right-side terminal:
 oc get all -n {user}-dev
 ----
 
-The output should list several things:
+出力には、以下のように複数のリソースが表示されます。
 
 [.console-output]
 [source,bash,subs="attributes+,+macros"]
@@ -173,7 +161,7 @@ route.route.openshift.io/gateway-vertx   gateway-vertx   8080-tcp   edge/Redirec
 ----
 
 
-Wait for the rollout of the new pods to happen in the deployment:
+deployment で新しい pod の rollout が完了するのを待ちます。
 
 [.console-input]
 [source,bash,subs="attributes+,+macros"]
@@ -181,15 +169,13 @@ Wait for the rollout of the new pods to happen in the deployment:
 oc rollout status deploy/inventory-quarkus -n {user}-dev
 ----
 
-If it is successful, you can now visit the deployed application in the browser.
+成功したら、ブラウザでデプロイされたアプリケーションにアクセスできます。
 
-From the OpenShift web console, select *{user}-dev* Project from
-drop-down menu, and use the _Topology_ view and click on the route shortcut
-for the `gateway-vertx` application.
+OpenShift web console でドロップダウンから *{user}-dev* Project を選択し、Topology view を開いて `gateway-vertx` アプリケーションの route ショートカットをクリックします。
 
 image::gitops/gitops-userx-dev.png[coolstore App]
 
-Alternatively, get the app Route from the CLI:
+または CLI で Route を取得しても構いません。
 
 [.console-input]
 [source,bash,subs="attributes+,+macros"]
@@ -197,12 +183,12 @@ Alternatively, get the app Route from the CLI:
 oc get route gateway-vertx -n {user}-dev -o jsonpath='{"http://"}{.spec.host}{"\n"}'
 ----
 
-WARNING: This route is only available via HTTP. If you try to visit via HTTPS,
-you will get an _Application not available_ error. Do you know why that is?
+WARNING: この route は HTTP でのみ利用できます。HTTPS でアクセスしようとすると Application not available エラーになります。
 
 === Addressing Configuration Drift
 
-Let's introduce a change in the application environment! We will scale up the replicas, and see how OpenShift GitOps manages the drift in that case.
+アプリケーション環境に変更を加えてみましょう。
+replicas を増やし、その際に OpenShift GitOps が drift をどのように扱うかを確認します。
 
 [.console-input]
 [source,bash,subs="attributes+,+macros"]
@@ -211,10 +197,14 @@ Let's introduce a change in the application environment! We will scale up the re
 oc -n {user}-dev scale deploy inventory-quarkus --replicas=2
 ----
 
-You can see that the pods will start to get created, but instantly get deleted again. This is because OpenShift GitOps is automatically setting the replicas number to 1, as specified in the application manifest for the quarkus-inventory deployment.
+pod が作成され始めますが、すぐに削除されることがわかります。
+これは、OpenShift GitOps が inventory-quarkus deployment の application manifest に指定されたとおり、replicas 数を 1 に自動的に戻しているためです。
 
 You can set up Argo CD to automatically correct drift by setting the `selfHeal`
 property of the `Application` manifest to do so. Using the example from link:#_deploy_the_application[above]:
+
+Argo CD では、`Application` マニフェストの `selfHeal` プロパティを設定することで、drift を自動修正するよう構成できます。
+link:#_deploy_the_application[上の例] では次のとおりです。
 
 [.console-input]
 [source,yaml,subs="attributes+,+macros"]
@@ -228,7 +218,7 @@ spec:
       selfHeal: true
 ----
 
-As an exercise, lets try disabling the Self-healing behavior by patching the application with this command:
+演習として、次のコマンドで application を patch し、Self-healing を無効化してみましょう。
 
 [.console-input]
 [source,bash,subs="attributes+,+macros"]
@@ -236,7 +226,7 @@ As an exercise, lets try disabling the Self-healing behavior by patching the app
 oc patch application/coolstore-app-dev -n {user}-argocd --type=merge -p='{"spec":{"syncPolicy":{"automated":{"prune":true,"selfHeal":false}}}}'
 ----
 
-And then repeat the process of changing the replicas:
+そのうえで、replicas を変更する操作をもう一度行います。
 
 [.console-input]
 [source,bash,subs="attributes+,+macros"]
@@ -245,44 +235,42 @@ And then repeat the process of changing the replicas:
 oc -n {user}-dev scale deploy inventory-quarkus --replicas=2
 ----
 
-Notice that the Application is now showing an out-of-sync status:
+Application が out-of-sync 状態として表示されることに注意してください。
 
 image::gitops-apps/gitops-user-dev-out-of-sync.png[Out-Of-Sync]
 
-Note that when Self Heal is not enabled you can manually sync your app via the Argo CD UI by:
+Self Heal が有効でない場合、Argo CD UI から手動で sync できます。
 
-* First clicking `SYNC`
-* Then clicking `SYNCHRONIZE`
+* まず `SYNC` をクリック
+* 次に `SYNCHRONIZE` をクリック
 
 image::gitops-apps/coolstore-manual-sync.png[Manually Sync the application]
 
-After the sync process is done, the Argo CD UI would mark the application as in
-sync.
+sync が完了すると、Argo CD UI 上でアプリケーションは `in sync` と表示されます。
 
 
 [#applicationsets]
 == ApplicationSets
 
-In the previous sections we deployed the development and production versions of the `coolstore-app` as individual Applications. However there
-are often situations, as per what we did previously, where you want to deploy or generate multiple versions of the same Application with variations.
+前のセクションでは、`coolstore-app` の development 版と production 版を、個別の Applications としてデプロイしました。
+しかし、以前行ったように、同じ Application を少しずつ変化させた複数バージョンとしてデプロイ／生成したい場面はよくあります。
 
-This is where the Argo CD link:https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset[ApplicationSet,window="_blank"] feature
-comes into play. ApplicationSets enables you to generate Application resources using templating. Each ApplicationSet can include one or
-more generators that power the creation of Applications. Argo CD currently includes many different generators and enables users to create custom generators via a Plugin architecture.
+そこで登場するのが、Argo CD の link:https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset[ApplicationSet,window="_blank"] 機能です。
+ApplicationSet を使うと、テンプレート化によって Application リソースを生成できます。
+各 ApplicationSet は、1つ以上の generator を含められ、これらが Application の作成を駆動します。
+Argo CD にはさまざまな generator が用意されており、Plugin アーキテクチャを通じてカスタム generator を作成することもできます。
 
-There are a number of link:https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators[generators,window="_blank"] available, some common examples of these generators include:
+利用可能な link:https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators[generators,window="_blank"] にはいくつか種類があり、代表例は次のとおりです。
 
-* Using the link:https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-List[List,window="_blank"] generator for generating applications for different environments. We will look at an example of this shortly
-* Leveraging the link:https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-Git/[git,window="_blank"] generator to create Applications based on the contents of a git repo, we will look at this in Module 4 as a more dynamic way to generate apps for environments.
-* Using the https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-Pull-Request/[Pull Request,window="_blank"] generator to provision new environments on the fly to run automated tests before merging the code.
-* Using the link:https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-Cluster/[Cluster,window="_blank"] generator to provision an Application across multiple clusters.
-* Using the link:https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-Matrix[Matrix,window="_blank"]
-and link:https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-Merge[Merge,window="_blank"] to combine the results from multiple generators.
+* link:https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-List[List,window="_blank"] generator を使い、環境ごとのアプリケーションを生成する（この後すぐ例を見ます）
+* link:https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-Git/[git,window="_blank"] generator を使い、git リポジトリの内容に基づいて Application を作成する（Module 4 で、環境向けアプリをより動的に生成する方法として扱います）
+* https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-Pull-Request/[Pull Request,window="_blank"] generator を使い、マージ前の自動テストのために、その場で新しい環境をプロビジョニングする
+* link:https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-Cluster/[Cluster,window="_blank"] generator を使い、複数クラスターにまたがって Application をプロビジョニングする
+* link:https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-Matrix[Matrix,window="_blank"] と link:https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Generators-Merge[Merge,window="_blank"] を使い、複数 generator の結果を組み合わせる
 
-Let's look at a simple example of an Application that uses a List generator to create the development and production Applications
-for the `coolstore-app` Application we deployed earlier.
+それでは、List generator を使って、先ほどデプロイした `coolstore-app` の development／production 向け Applications を作成するシンプルな例を見てみましょう。
 
-Deploy the ApplicationSet using the following command:
+次のコマンドで ApplicationSet をデプロイします。
 
 [.console-input]
 [source,sh,subs="attributes",role=execute]
@@ -290,7 +278,7 @@ Deploy the ApplicationSet using the following command:
 sed 's/$USER/{user}/' ~/workshop/content/modules/ROOT/examples/coolstore-gitops-appset.yaml | sed 's/$SUBDOMAIN/{subdomain}/' | oc apply -f - -n {user}-argocd
 ----
 
-Next have a look at the ApplicationSet that was deployed with this command:
+続いて、デプロイされた ApplicationSet を確認します。
 
 [.console-input]
 [source,sh,subs="attributes",role=execute]
@@ -335,16 +323,14 @@ spec:
           prune: true
           selfHeal: true
 ----
-<1> Argo CD will automatically delete the Applications when the ApplicationSet is deleted. Including a finalizer ensures that the
-resources the Application deployed will also be deleted. See more information link:https://argo-cd.readthedocs.io/en/stable/user-guide/app_deletion/#about-the-deletion-finalizer[here,window="_blank"].
-<2> We are using the `list` generator which enables us to provide a static list of elements to dynamically
-generate applications, basically it is 1:1 per element
-<3> Each element has one value, `environment`, which will be templated into the resulting Application object.
-<4> The `template` section is where we define the Application resource that the ApplicationSet will create
-<5> Here is an example of referencing the `environment` value to template the name.
+<1> ApplicationSet が削除されたとき、Argo CD は Applications も自動的に削除します。finalizer を含めることで、Application がデプロイしたリソースも削除されるようにします。詳細は link:https://argo-cd.readthedocs.io/en/stable/user-guide/app_deletion/#about-the-deletion-finalizer[こちら,window="_blank"] を参照してください。
+<2> `list` generator を使用しています。これにより、静的な要素リストを与えて動的に Application を生成できます（基本的には element 1つにつき Application 1つの 1:1 です）。
+<3> 各 element は `environment` という1つの値を持ち、生成される Application オブジェクトにテンプレートとして埋め込まれます。
+<4> `template` セクションで、ApplicationSet が作成する Application リソースを定義します。
+<5> `environment` 値を参照して name をテンプレート化している例です。
 
-Note that while we created these Applications earlier, the ApplicationSet will now assume ownership of them, This
-can be validated with the following command:
+なお、これらの Applications は先ほど手動で作成しましたが、ApplicationSet は以降それらの所有権（ownership）を引き継ぎます。
+次のコマンドで確認できます。
 
 [.console-input]
 [source,sh,subs="attributes",role=execute]
@@ -369,34 +355,31 @@ oc get app coolstore-app-dev -o=jsonpath='{.metadata.ownerReferences}' -n {user}
 ]
 ----
 
-As we can see ApplicationSets provide an easy way to generate Application objects both statically, but
-more importantly as we will see in module 4, dynamically.
+このように ApplicationSets は、静的に Application オブジェクトを生成できるだけでなく、より重要なのは Module 4 で見るように、動的に生成できる点です。
 
 [#helm]
 == Helm
 include::_attributes.adoc[]
 
-link:https://helm.sh/[Helm] is a package and install manager that standardizes and
-simplifies packaging and deployment of containerized applications with Kubernetes. Unlike Kustomize, which
-uses a patching approach, Helm uses templating to enable users to tailor the deployed manifests
-as required.
+link:https://helm.sh/[Helm] は、Kubernetes でコンテナ化アプリケーションのパッケージ化とデプロイを標準化・簡素化する、パッケージ／インストール管理ツールです。
+パッチ適用アプローチの Kustomize と異なり、Helm はテンプレート化を用いて、必要に応じてデプロイされる manifests を調整できるようにします。
 
 [#exploring-helm]
 === Exploring Helm
 
-The principles of 'Helm' are as follows:
+Helm の基本的な考え方は次のとおりです。
 
-* A package manager for Kubernetes with applications packaged as charts
-* Uses templates to enable applications to be configured per installation
-* Parameters for the chart are held in a `values.yaml` file and consumed by the templates
+* Kubernetes 向けのパッケージマネージャーで、アプリケーションを chart としてパッケージ化する
+* テンプレートを用いて、インストールごとにアプリケーションを設定できるようにする
+* chart のパラメーターは `values.yaml` ファイルに保持され、テンプレートから参照される
 
 image::gitops-apps/helm-logo.png[Helm Logo]
 
 [#exploring-helm-cli]
 === Exploring the Helm CLI
 
-Similar to Kustomize from the previous lab, the `helm` CLI should have been installed as part of the lab
-setup. Verify that it has been installed.
+前のラボでの Kustomize と同様に、`helm` CLI はラボ環境セットアップの一部としてインストールされているはずです。
+インストール済みであることを確認します。
 
 [.console-input]
 [source,bash,subs="attributes+,+macros"]
@@ -404,7 +387,7 @@ setup. Verify that it has been installed.
 helm version --short
 ----
 
-This should display the version, it should look something like this.
+バージョンが表示されます。例としては次のような形式になります。
 
 [.console-output]
 [source,bash,subs="attributes+,+macros"]
@@ -412,28 +395,23 @@ This should display the version, it should look something like this.
 {v3.14.4+37.el9+g7163c12}
 ----
 
-Helm is a package manager that can be used to install a Helm chart into a kubernetes cluster
-and can then manage the lifecycle of the application including upgrades and uninstalling the
-application. However Helm can also render the chart as pure yaml without installing the
-application in a cluster.
+Helm は、Kubernetes クラスターに Helm chart をインストールするために使用でき、インストール後はアップグレードやアンインストールなど、アプリケーションのライフサイクルを管理できます。
+一方で Helm は、クラスターにインストールせずに、chart を純粋な yaml としてレンダリングすることもできます。
 
-Helm Charts will be a set of manifests that will define your application for Kubernetes.
+Helm Charts は、Kubernetes 向けにアプリケーションを定義する manifests の集合です。
 
-Argo CD follows a philosophy of managing manifests and as a result it interacts with Helm by
-having Helm templating the chart. It does not install the chart in a Kubernetes cluster. The
-lifecycle of a Helm chart in Argo CD is managed by updating the version of the chart Argo CD is
-using and having Argo CD render the new version of the chart.
+Argo CD は「manifests を管理する」という思想に従っているため、Helm とは、Helm によって chart をテンプレート化（レンダリング）させる形で連携します。
+つまり、Argo CD 自体は Kubernetes クラスターに chart をインストールしません。
+Argo CD における Helm chart のライフサイクルは、Argo CD が使用する chart のバージョンを更新し、Argo CD が新しいバージョンをレンダリングすることで管理されます。
 
-As a result for the purpose of this workshop we will be focusing on the `helm template`
-command rather than `helm install`.
+そのため、本ワークショップでは `helm install` ではなく、`helm template` コマンドに焦点を当てます。
 
 [#exploring-helm-charts]
 === Deploying Application with Helm
 
-In this section we will explore the chart that we will be deploying into the cluster using GitOps.
-This chart will be used to deploy the devsecops pipeline that will be used with the applications we did previously. We will work with a chart in the
-`content/modules/ROOT/files/gitops/helm/globex-ui` directory within the
-repository you cloned.
+このセクションでは、GitOps を使ってクラスターにデプロイする chart を確認します。
+この chart は、以前扱ったアプリケーションで利用する devsecops pipeline をデプロイするために使用します。
+クローンしたリポジトリ内の `content/modules/ROOT/files/gitops/helm/globex-ui` ディレクトリにある chart を扱います。
 
 [.console-input]
 [source,bash,subs="attributes+,+macros"]
@@ -441,8 +419,8 @@ repository you cloned.
 cd ~/workshop/content/modules/ROOT/files/gitops/helm/globex-ui
 ----
 
-Next if you run the `ls` command you should see two files: `Chart.yaml` and `values.yaml`, as well
-as a directory called templates. Let's have a look at these in more detail.
+次に `ls` を実行すると、`Chart.yaml` と `values.yaml` の2つのファイル、および templates というディレクトリが見えるはずです。
+それぞれをもう少し詳しく見ていきましょう。
 
 .link:https://github.com/AdvancedDevSecOpsWorkshop/workshop/blob/main/content/modules/ROOT/files/gitops/helm/globex-ui/Chart.yaml[Chart.yaml,window='_blank']
 [source,yaml,subs="+macros,attributes+"]
@@ -450,7 +428,7 @@ as a directory called templates. Let's have a look at these in more detail.
 include::ROOT:example$globex-ui/Chart.yaml[]
 ----
 
-This file is the link:https://helm.sh/docs/topics/charts/#the-chartyaml-file[chart definition] which specifies name, version and other characteristics of the chart.
+このファイルは link:https://helm.sh/docs/topics/charts/#the-chartyaml-file[chart definition] であり、chart の名前、バージョン、その他の特性を定義します。
 
 .link:https://github.com/AdvancedDevSecOpsWorkshop/workshop/blob/main/content/modules/ROOT/files/gitops/helm/globex-ui/values.yaml[values.yaml,window='_blank']
 [source,yaml,subs="+macros,attributes+"]
@@ -458,22 +436,24 @@ This file is the link:https://helm.sh/docs/topics/charts/#the-chartyaml-file[cha
 include::ROOT:example$globex-ui/values.yaml[]
 ----
 
-The `values.yaml` file is the default set of values that will be used by the chart. When templating or installing the chart
-you can provide your own values.yaml to override some or all of these defaults as needed for a specific use case.
+`values.yaml` は、chart が使用するデフォルト値のセットです。chart をテンプレート化またはインストールする際に、独自の values.yaml を渡して、特定のユースケースに合わせてデフォルト値の一部または全部を上書きできます。
 
-Notice that since this is a yaml file parameters can be hierarchical which enables grouping related parameters together as shown
-by the `gitea` section.
+これは yaml ファイルであるため、`gitea` セクションのように、関連するパラメーターをまとめるために階層構造にできる点にも注目してください。
 
-The templates/ directory is where template files reside. When Helm assesses a chart, it processes all files in the templates/ directory using the template rendering engine. The results of these templates are then gathered and forwarded to Kubernetes.You can learn more about templating link:https://helm.sh/docs/chart_template_guide/getting_started/[here,window='_blank'].
+templates/ ディレクトリにはテンプレートファイルが置かれます。
+Helm が chart を評価する際、templates/ 配下のすべてのファイルをテンプレートレンダリングエンジンで処理します。
+その結果が収集され、Kubernetes へ渡されます。
+テンプレート化の詳細は link:https://helm.sh/docs/chart_template_guide/getting_started/[こちら,window='_blank'] を参照してください。
 
 [#helm-template]
 === Helm Template
 
-In this section, we will explore how to use the `helm template` command to generate Kubernetes manifests from a Helm chart. This command is a fundamental tool for understanding how Helm charts work and for visualising the resources they create.
+このセクションでは、`helm template` コマンドを使って Helm chart から Kubernetes manifests を生成する方法を確認します。
+このコマンドは、Helm chart の動作や、作成されるリソースを可視化するための基本ツールです。
 
 ==== Step 1: Run the Helm template Command
 
-Execute the following command to render the chart template from your local directory and display the output on the screen:
+次のコマンドを実行し、ローカルディレクトリから chart をレンダリングして結果を画面に表示します。
 
 [.console-input]
 [source,bash,subs="attributes+,+macros"]
@@ -484,9 +464,9 @@ helm template globex-ui ~/workshop/content/modules/ROOT/files/gitops/helm/globex
 ==== Step 2: View the Output
 
 
-After running the command, you will see the output of the `helm template` command, which represents the generated Kubernetes manifest files. Below is an example of what you can expect to see:
+コマンド実行後、`helm template` の出力（生成された Kubernetes manifests）が表示されます。以下は表示される内容の例です。
 
-You will see the output of the `helm template`, which is lengthy, so this is just an excerpt:
+`helm template` の出力は長いため、ここでは抜粋のみ示します。
 
 [.console-output]
 [source,yaml,subs="attributes+,+macros"]
@@ -534,12 +514,15 @@ spec:
 [#helm-charts-deploy-applications]
 === Using Helm charts to deploy applications in Argo CD
 
-In this section, we will utilize Helm charts to deploy applications within Argo CD. Helm charts provide a convenient way to manage and deploy Kubernetes applications. We will first examine the configuration file for an Argo CD Application that deploys a Helm chart for the app. This file contains essential configuration details such as the destination, source, project, and sync policy.
+このセクションでは、Helm charts を使って Argo CD 内にアプリケーションをデプロイします。
+Helm charts は Kubernetes アプリケーションを管理・デプロイする便利な方法を提供します。
+まず、アプリの Helm chart をデプロイする Argo CD Application の設定ファイルを確認します。
+ここには destination、source、project、sync policy などの重要な設定が含まれます。
 
 ==== Step 1: View the Argo CD Application Configuration
 
 
-To view the YAML configuration file for the Argo CD Application, execute the following command:
+Argo CD Application の YAML 設定ファイルを確認するには、次のコマンドを実行します。
 
 
 [.console-input]
@@ -548,7 +531,7 @@ To view the YAML configuration file for the Argo CD Application, execute the fol
 cat ~/workshop/content/modules/ROOT/examples/pipeline-helm-app.yaml
 ----
 
-You should see the following output:
+以下の出力が表示されます。
 
 .link:https://github.com/AdvancedDevSecOpsWorkshop/workshop/blob/main/documentation/modules/ROOT/examples/pipeline-helm-app.yaml[pipeline-helm-app.yaml,window='_blank']
 [source,yaml,subs="+macros,attributes+"]
@@ -556,11 +539,11 @@ You should see the following output:
 include::ROOT:example$pipeline-helm-app.yaml[]
 ----
 
-This YAML configuration defines an Argo CD Application named "pipeline-helm" that deploys a Helm chart from a specific Git repository to the "{user}-cicd" namespace.
+この YAML は、"pipeline-helm" という名前の Argo CD Application を定義しており、特定の Git リポジトリから Helm chart を "{user}-cicd" namespace にデプロイします。
 
 ==== Step 2: Deploy/Observe the Argo CD Application
 
-Apply the configuration in the file to create the Argo CD Application in the namespace {user}-argocd. This application will deploy the Helm chart for the pipeline app:
+ファイルの設定を適用し、namespace {user}-argocd に Argo CD Application を作成します。このアプリケーションが pipeline アプリの Helm chart をデプロイします。
 
 [.console-input]
 [source,bash,subs="attributes+,+macros"]
@@ -568,30 +551,34 @@ Apply the configuration in the file to create the Argo CD Application in the nam
 sed 's/$USER/{user}/' ~/workshop/content/modules/ROOT/examples/pipeline-helm-app.yaml | sed 's/$SUBDOMAIN/{subdomain}/' | oc create -f - -n {user}-argocd
 ----
 
-In the ArgoCD interface you should see the successful deployment of the "pipeline-helm" application.
+ArgoCD のインターフェースで、"pipeline-helm" アプリケーションが正常にデプロイされたことが確認できるはずです。
 
 image::gitops-helm/pipeline-helm-app.png[]
 
-Now click on the "pipeline-helm" application. We will explore its deployment. Although you could deploy it through a Helm repository, we're using a Git repository for this demonstration.
+次に "pipeline-helm" アプリケーションをクリックします。デプロイ内容を確認していきます。Helm リポジトリからもデプロイできますが、このデモでは Git リポジトリを使っています。
 
-Access the application details by clicking on the "Details" button.
+"Details" ボタンをクリックしてアプリケーション詳細にアクセスします。
 
 image::gitops-helm/pipeline-helm-app2.png[]
 
-Next, click on "Parameters." You will notice that there is no separate values file as the application is deployed directly from the Helm chart.
+次に "Parameters" をクリックします。アプリケーションは Helm chart から直接デプロイされているため、個別の values ファイルは存在しないことがわかります。
 
-All the files are now deployed in the {user}-cicd namespace, and you can see the full pipeline by accessing Pipelines -> pipelines in the console, as shown below:
+これで {user}-cicd namespace にすべてのファイルがデプロイされました。以下のようにコンソールの Pipelines -> pipelines にアクセスすると、パイプライン全体を確認できます。
 
 image::gitops-helm/pipeline-view.png[]
 
 [#custom-values-files]
 === Custom values files
 
-In this section we explore the use of custom values files with Helm charts. These allow you to tailor deployments to your specific needs. Custom values files offer the flexibility to override default settings without modifying the chart directly.
+このセクションでは、Helm charts に対してカスタム values ファイルを使う方法を確認します。
+これにより、chart 自体を直接変更することなく、特定の要件に合わせてデプロイ内容を調整できます。
+カスタム values ファイルは、デフォルト設定を上書きする柔軟性を提供します。
 
 ==== Explore the Custom Values Configuration
 
-Begin by examining a YAML file named "pipeline-helm-app-custom.yaml." This file closely resembles the previous configuration but introduces a critical difference: it references a custom values file stored in the same Git repository as the Helm chart.
+"pipeline-helm-app-custom.yaml" という YAML ファイルを確認します。
+このファイルは先ほどの設定に非常に似ていますが、重要な違いがあります。
+それは、Helm chart と同じ Git リポジトリに保存されているカスタム values ファイルを参照している点です。
 
 [.console-input]
 [source,bash,subs="attributes+,+macros"]
@@ -599,7 +586,8 @@ Begin by examining a YAML file named "pipeline-helm-app-custom.yaml." This file 
 cat ~/workshop/content/modules/ROOT/examples/pipeline-helm-app-custom.yaml
 ----
 
-You will notice a section in this YAML file that defines the name and path of the custom values file responsible for adjusting the Helm chart's default settings:
+この YAML の中に、カスタム values ファイルの名前とパスを定義するセクションがあります。
+これが Helm chart のデフォルト設定を調整する役割を担います。
 
 [.console-output]
 [source,yaml,subs="attributes+,+macros"]
@@ -610,19 +598,21 @@ You will notice a section in this YAML file that defines the name and path of th
         - custom_values_1/values.yaml
 ----
 
-Using ArgoCD to deploy a Helm chart with custom values files offers the advantage of tailoring and overriding the chart’s default settings, all without needing to alter the chart directly. This flexibility enables you to deploy the chart with different configurations to suit various environments or specific use cases.
+ArgoCD でカスタム values ファイル付きの Helm chart をデプロイすると、chart を直接変更することなく、デフォルト設定を調整・上書きできるという利点があります。
+この柔軟性により、異なる環境や特定ユースケースに合わせた別々の構成で chart をデプロイできます。
 
 [NOTE]
-Since we already deployed the Pipelines Helm chart we will not deploy the custom values Application since the two Applications would fight over the same resources.
+すでに Pipelines の Helm chart をデプロイ済みのため、ここではカスタム values の Application はデプロイしません。2つの Applications が同じリソースを取り合って競合してしまうためです。
 
 [#parameter_values]
 === Argo CD Application with Parameter Values
 
-In this section, we'll explore a YAML file where parameter values are embedded directly within the Application, eliminating the need for separate values files.
+このセクションでは、parameter values を Application に直接埋め込み、別の values ファイルを不要にする構成を確認します。
 
 ==== Examine the Parameterized Configuration
 
-Begin by examining the YAML file named "pipeline-helm-app-para.yaml." This file, similar to the previous configurations, defines an Argo CD Application for deploying a Helm chart. However, a notable difference is the inclusion of all desired parameter values directly within the YAML file:
+"pipeline-helm-app-para.yaml" という YAML ファイルを確認します。
+このファイルは前の設定と同様に、Helm chart をデプロイするための Argo CD Application を定義していますが、大きな違いとして、必要な parameter values をすべて YAML 内に直接記載しています。
 
 [.console-input]
 [source,bash,subs="attributes+,+macros"]
@@ -636,25 +626,28 @@ cat ~/workshop/content/modules/ROOT/examples/pipeline-helm-app-para.yaml
 include::ROOT:example$pipeline-helm-app-para.yaml[]
 ----
 
-In the 'parameters' section of the YAML, you will notice that we have included all the desired values directly within the chart.
+YAML の 'parameters' セクションを見ると、chart に渡したい値がすべて直接含まれていることが確認できます。
 
-Deploying a Helm chart through ArgoCD with integrated parameters allows you to customize default settings without modifying the chart itself or relying on external values files. This centralizes configuration management across different environments.
+ArgoCD を通じて parameter を埋め込んだ形で Helm chart をデプロイすれば、chart 自体を変更したり外部 values ファイルに依存したりすることなく、デフォルト設定をカスタマイズできます。
+これにより、環境間での設定管理を中央集約できます。
 
 [#helm-conclusion]
 === Conclusion: Helm on ArgoCD
 
-In this module we learned how to deploy Helm charts using Argo CD and we looked at the different ways in Argo CD to pass parameters to the Helm chart. A brief summary of the Pros and Cons of the approaches we examined can be summarised as follows:
+このモジュールでは、Argo CD を使って Helm charts をデプロイする方法を学び、また Argo CD で Helm chart にパラメータを渡すさまざまな方法を確認しました。
+ここで扱ったアプローチの Pros / Cons を簡単にまとめると以下のとおりです。
 
 |===
 |*Custom Values File - Pros* | *Built-in Parameters - Pros*
-|Customize Configurations:Create a separate values.yaml file to tailor configurations for different environments. Override default values in the chart’s values.yaml file with your specific settings.|Environment-specific YAML: Manage YAML configurations for each environment using branches or tags.
-| Rapid Modification: External values files provide an advantage over managing multiple Helm charts with individual values.
-Facilitates quick modification of multiple values through a single file change.|No reliance on external values files makes local testing and debugging with `helm template` and `helm lint` easier.
+|設定のカスタマイズ: 環境ごとに別の values.yaml を用意し、異なる環境向けに設定を調整できる。chart の values.yaml のデフォルト値を、必要な設定で上書きできる。|環境ごとの YAML 管理: ブランチやタグを用いて、環境ごとの YAML 構成を管理できる。
+|迅速な変更: 外部 values ファイルは、個別の values を持つ複数の Helm chart を管理するよりも有利。1つのファイル変更で複数の値を素早く変更できる。|外部 values ファイルに依存しないため、`helm template` や `helm lint` を使ったローカルテスト／デバッグが容易。
 |*Custom Values File - Cons*|*Built-in Parameters - Cons*
-|Manual Updates: Requires manual updates to the values file, deviating from the default Helm charts behavior.|Customization Limitations: Limited customization options due to YAML file constraints.
-|Potential for errors or inconsistencies if the values file and chart configurations do not align.|Necessitates a separate chart for each environment, potentially leading to redundancy.
+|手動更新: values ファイルの手動更新が必要となり、デフォルトの Helm charts の振る舞いから外れる。|カスタマイズの制約: YAML ファイル上の制約により、カスタマイズの自由度が限定される。
+|values ファイルと chart の設定が一致しない場合、エラーや不整合が発生する可能性がある。|環境ごとに別 chart が必要となり、冗長になりうる。
 |===
 
-You can read more about the patterns for deploying Helm charts with Argo CD link:https://developers.redhat.com/articles/2023/05/25/3-patterns-deploying-helm-charts-argocd[here,window='_blank'].
+Argo CD で Helm charts をデプロイするパターンについては link:https://developers.redhat.com/articles/2023/05/25/3-patterns-deploying-helm-charts-argocd[こちら,window='_blank'] で詳しく読めます。
 
-In conclusion, this module introduced Helm as a Kubernetes package manager with templating capabilities. We explored its usage in ArgoCD, focusing on rendering Helm charts as pure YAML and customizing deployments with custom values and parameter values for flexible configuration management. This approach streamlines the deployment process and enables customized configurations without altering the Helm chart directly.
+まとめとして、このモジュールではテンプレート化機能を備えた Kubernetes のパッケージマネージャーとして Helm を紹介しました。
+また、ArgoCD 上での利用方法として、Helm chart を純粋な YAML としてレンダリングすることに焦点を当て、カスタム values と parameter values による柔軟な構成管理を確認しました。
+このアプローチにより、Helm chart を直接変更することなくデプロイを効率化し、環境や要件に合わせた構成を実現できます。
