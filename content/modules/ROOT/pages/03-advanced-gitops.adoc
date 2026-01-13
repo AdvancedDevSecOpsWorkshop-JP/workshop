@@ -1,160 +1,130 @@
 = Advanced OpenShift GitOps(30 mins)
 
-In this module we will review advanced GitOps topics that Platform teams must be
-familiar with and Developers should be aware of. Topics will include items like Argo CD Architecture, Command Line Interface,
-Role Based Access Controls (RBAC), AppProjects and Apps in Any Namespace.
+このモジュールでは、Platform チームが把握しておくべき、また Developers も理解しておくべき高度な GitOps トピックを確認します。
+扱うトピックには、Argo CD Architecture、Command Line Interface、Role Based Access Controls (RBAC)、AppProjects、および任意の namespace 内のアプリ などが含まれます。
 
 [#openshift-gitops-architecture]
 == OpenShift GitOps Architecture
 
-In this section we will do a brief overview of the OpenShift GitOps architecture which is depicted in the diagram below.
+このセクションでは、以下の図に示す OpenShift GitOps のアーキテクチャを簡単に概観します。
 
 image::gitops/argocd-architecture.png[]
 
 [NOTE]
-In the diagram above, everything contained within the dotted is running in OpenShift whereas outside the line are external
-dependencies or interactions.
+上記の図では、点線の内側に含まれるものはすべて OpenShift 上で稼働しており、点線の外側は外部依存（external dependencies）または外部との連携（interactions）を示しています。
 
-The OpenShift GitOps operator is used to deploy, manage and upgrade an installation of Argo CD which runs in a
-specified namespace. The Argo CD installation contains several components, running as individual deployments,
-which are as follows:
+OpenShift GitOps operator は、指定した namespace で稼働する Argo CD のインストールをデプロイ、管理、アップグレードするために使用されます。
+Argo CD のインストールは複数のコンポーネントで構成され、それぞれが個別の deployment として稼働します。
+主なコンポーネントは以下のとおりです。
 
-1. *Application Controller*. This component is responsible for deploying Kubernetes resources and watching the resources for change,
-to do so it interacts with the Kubernetes API.
-2. *Repo Server*. This component manages access to the manifests via a git repository, it is responsible for
-fetching the manifests (i.e. yaml files). These manifests can be built from raw yaml, helm or kustomize but
-additional tools can be used via a plugin architecture. For improved performance, it caches these manifests
-in the redis component.
-3. *Server*. This provides the user interface as well as a REST API.
-4. *Dex (optional)*. Provides authentication via OpenShift OAuth2, in this workshop it is not used as we
-are authenticating directly against Keycloak.
-5. *ApplicationSet Controller (Not shown)*. This component is responsible for managing ApplicationSets which
-are used to generate Applications using generators. These generators can create Applications based on Pull Requests,
-directories in git, clusters, etc.
+1. *Application Controller*: Kubernetes リソースをデプロイし、リソースの変更を監視する責務を持ちます。そのために Kubernetes API とやり取りします。
+2. *Repo Server*: git リポジトリ経由で manifests へのアクセスを管理し、manifests（例：yaml ファイル）を取得します。これらの manifests は、生の yaml、helm、kustomize から生成できます。また、プラグインアーキテクチャにより追加ツールも利用可能です。性能向上のため、生成された manifests を redis コンポーネントにキャッシュします。
+3. *Server*: ユーザーインターフェースと REST API を提供します。
+4. *Dex (optional)*: OpenShift OAuth2 経由の認証を提供します。本ワークショップでは Keycloak に対して直接認証しているため利用しません。
+5. *ApplicationSet Controller (図示は無し)*: generator を使って Applications を生成する ApplicationSets を管理します。generator は Pull Requests、git 内のディレクトリ、クラスターなどに基づいて Applications を作成できます。
 
 [#workshop-architecture]
 == Workshop Architecture
 
-In this workshop, two GitOps instances have been deployed as follows:
+このワークショップでは、以下の2つの GitOps インスタンスがデプロイされています。
 
-1. *Cluster GitOps*. This is used by the platform team to manage cluster configuration as well as
-cluster-scoped tenant resources (i.e. Namespaces, Quotas, NetworkPolicy, Operators, etc). It has cluster-admin
-level Kubernetes privileges in order to manage cluster configuration.
+1. *Cluster GitOps*: Platform チームがクラスター構成（cluster configuration）と、cluster-scoped なテナントリソース（例：Namespaces、Quotas、NetworkPolicy、Operators など）を管理するために使用します。クラスター構成を管理するために cluster-admin レベルの Kubernetes 権限を持ちます。
 
-2. *Shared GitOps*. This instance is used by application teams to deploy their applications. This is a shared
-GitOps environment with multiple application teams accessing it. As a result Argo CD Role Based Access Controls (RBAC) have been
-configured to manage access so that users from different teams cannot view or modify other teams applications. Additionally
-it has much less Kubernetes privileges then the Cluster GitOps instance possesses.
+2. *Shared GitOps*: アプリケーションチームがアプリケーションをデプロイするために使用するインスタンスです。複数のアプリケーションチームが共用する GitOps 環境であるため、チーム間で他チームのアプリケーションを参照・変更できないよう、Argo CD Role Based Access Controls (RBAC) が構成されています。また、Cluster GitOps と比較すると Kubernetes 権限は大幅に少なくなっています。
 
 === Cluster GitOps
 
-By default the OpenShift GitOps operator will install an instance in the `openshift-gitops` namespace, this instance
-is cluster-scoped and users are encouraged to use this instance for cluster configuration including managing
-privileged resources on behalf of tenants (Namespaces, Quotas, Operators, etc).
+デフォルトでは OpenShift GitOps operator は `openshift-gitops` namespace にインスタンスをインストールします。
+このインスタンスは cluster-scoped であり、テナントに代わって権限の強いリソース（Namespaces、Quotas、Operators など）を管理するなど、クラスター構成用途で利用することが推奨されています。
 
-Lets have a brief look at this instance first, to do so access the OpenShift Application Menu and select the Cluster Argo CD
-item highlighted in red:
+まず、このインスタンスを簡単に確認します。
+OpenShift Application Menu にアクセスし、赤でハイライトされている Cluster Argo CD を選択します。
 
 image::gitops/openshift-app-menu-cluster-argocd.png[]
 
-This will take you to the Argo CD user interface for this instance, to login click the Keycloak button shown in red:
+このインスタンスの Argo CD UI が開きます。ログインするには、赤で示された Keycloak ボタンをクリックします。
 
 image::gitops/argocd-keycloak-login.png[]
 
-Assuming you have already logged into OpenShift with Keycloak you will be automatically logged into Argo CD since
-we are using Keycloak to provide Single-Sign-On in this workshop. Once you are logged in you will see the following
-applications:
+本ワークショップでは Keycloak による Single-Sign-On を利用しているため、すでに Keycloak で OpenShift にログイン済みであれば Argo CD にも自動的にログインされます。
+ログイン後、以下のような applications が表示されます。
 
 image::gitops/argocd-cluster-users.png[]
 
-Notice how you can view all of the user projects (user1, user2, user3, etc), this is because we have used Argo CD RBAC
-to provide users in the `developers` group with limited access to the Argo CD Project that these applications are tied to.
+user1、user2、user3 など、すべてのユーザープロジェクトを閲覧できる点に注目してください。
+これは Argo CD RBAC を使い、`developers` グループのユーザーに対して、これらの applications が紐づく Argo CD Project への限定的なアクセスを付与しているためです。
 
 [NOTE]
-It is uncommon for developers to have any access to the cluster scoped instance which is typically managed by the platform
-team, we are providing it here for illustrative purposes. In situations where it is beneficial for high performing
-developer teams to have access typically that access would be limited to Applications that are specific
-to that team. (i.e. user1 could only see the user1 application, etc)
+cluster-scoped のインスタンスは通常 Platform チームが管理し、developers がアクセスすることは一般的ではありません。ここでは説明目的で提供しています。高い自律性を持つ開発チームにアクセスを許可する場合でも、通常はそのチームに固有の Applications のみに限定します（例：user1 は user1 の application だけ見える、など）。
 
-Select the app for your particular user called `{user}`. Depending on the number of users attending the workshop there
-could be a lot of Applications, you can find your application by using the filter bar:
+自分のユーザーに対応する app（`{user}`）を選択してください。参加者が多い場合 Applications が多数あるため、フィルタバーを使って自分の application を探せます。
 
 image::gitops/argocd-filter.png[]
 
-Once you find the Application, click on it to view all of the resources that this Application deployed. This Application
-is provisioning all of the resources that a tenant, i.e. your user, requires on this cluster including namespaces, rolebindings,
-etc. These are the resources that the platform team, i.e. cluster-admins, need to provision for developer teams on the
-cluster.
+Application を見つけたらクリックし、その Application がデプロイしたリソースを確認します。
+この Application は、テナント（あなたのユーザー）がこのクラスターで必要とする namespace、rolebindings などを含む各種リソースをプロビジョニングしています。
+これらは Platform チーム（cluster-admins）が開発チーム向けに用意すべきリソースです。
 
 image::gitops/cluster-argocd-user-app.png[]
 
-You can view the groups associated with your logged in user by clicking on the user button.
+ログイン中ユーザーに関連付けられたグループは、ユーザーボタンをクリックすると確認できます。
 
 image::gitops/argocd-user-groups.png[]
 
-Note the `developers` group that is shown along with the user specific team, `teamX`, that your user is associated with. In our scenario user1 is on
-team 1, user2 on team2, etc. The `developers` group is a generic group that all of the application developers belong to.
+`developers` グループと、ユーザーが所属するユーザー固有のチーム（`teamX`）が表示される点に注意してください。
+このシナリオでは user1 は team1、user2 は team2…という割り当てです。`developers` グループは、すべての application developers が所属する汎用グループです。
 
-These groups are provisioned in Keycloak and made available to Argo CD when you logged into the application.
+これらのグループは Keycloak でプロビジョニングされており、アプリケーションにログインした際に Argo CD でも利用できるようになります。
 
-In the next section we will review the Shared Argo CD instance and do a deeper dive afterwards on how Argo CD RBAC is configured
-to determine the access that users have to resources in Argo CD. For now know that you have very limited permissions
-on the Applications in the `Users` project as only Get and Sync permissions have been enabled.
+次のセクションでは Shared Argo CD インスタンスを確認し、その後 Argo CD RBAC がどのように構成されてユーザーのアクセス権限が決定されるかを深掘りします。
+現時点では、`Users` project 内の Applications に対しては Get と Sync のみが有効であり、非常に限定的な権限しかない点を押さえてください。
 
 [NOTE]
-There is another Argo CD Project deployed here for cluster configuration for which the `developers` group has no
-permissions, If at the end of the workshop you would like to explore how the Workshop cluster was configured using GitOps
-you can ask the instructor to enable visibility.
+ここにはクラスター構成用途の別の Argo CD Project もデプロイされており、`developers` グループには権限がありません。
+ワークショップ終了時に GitOps でワークショップクラスターがどのように構成されているか確認したい場合は、講師に可視化を依頼してください。
 
 === Shared GitOps
 
-The Shared GitOps instance is the multi-tenant Argo CD instance that developer teams, i.e. you,
-will interact with to deploy applications and resources. Compared to the
-Cluster GitOps instance it has much less privileges on the cluster to align with developer
-team responsibilities around deploying applications.
+Shared GitOps インスタンスは、開発チーム（つまりあなた）がアプリケーションやリソースをデプロイするために操作するマルチテナントの Argo CD インスタンスです。
+Cluster GitOps と比べ、開発チームの責務（アプリケーションのデプロイ）に合わせてクラスター上の権限が大幅に制限されています。
 
 [NOTE]
-While technically a single Argo CD instance can be used for both cluster configuration and developer deployments
-by leveraging Argo CD RBAC, it is recommended that these use cases be in separate instances to minimize the possibilities
-of privilege escalation. Privilege escalation can occur if there is a hole in the Argo CD RBAC configuration enabling
-a developer team member to leverage the higher kubernetes permissions a cluster configuration GitOps instance would have.
+技術的には、Argo CD RBAC を活用することで 1つの Argo CD インスタンスをクラスター構成と開発デプロイの両方に使うことも可能です。しかし privilege escalation の可能性を最小化するため、これらのユースケースは別インスタンスに分けることが推奨されます。たとえば Argo CD RBAC に穴があると、開発者がクラスター構成用途インスタンスの高い Kubernetes 権限を悪用できてしまう可能性があります。
 
-Login into the Shared GitOps instance by using the link in the OpenShift application menu:
+OpenShift application menu から Shared GitOps インスタンスへのリンクを使ってログインします。
 
 image::gitops/openshift-app-menu-shared-argocd.png[]
 
-The login process is identical to the Cluster GitOps instance, click the Keycloak login button to complete the process. Once logged
-in a set of Applications will be displayed:
+ログイン手順は Cluster GitOps と同じです。
+Keycloak ログインボタンをクリックして完了してください。
+ログイン後、Applications の一覧が表示されます。
 
 image::gitops/shared-gitops-apps.png[]
 
-Note in the Shared GitOps, unlike the Cluster GitOps instance, you can only view Applications that are specific to your user.
+Shared GitOps では、Cluster GitOps と異なり、自分のユーザーに紐づく Applications だけが表示される点に注目してください。
 
-We have a `dev-tools` Application, along with the other applications deployed in the previous module, to deploy team specific
-Sonarqube and Nexus instances which will be used in the Pipelines
-module of this workshop. If you check with your neighbors, assuming they have reached this section, you will note that
-every person has their own dev-tools Application which is unique to that workshop user. How can we have an Application
-with the same name multiple times in the same Argo CD instance?
+`dev-tools` Application と、前モジュールでデプロイした他の applications が表示されます。
+`dev-tools` は、後続の Pipelines モジュールで使用するチーム固有の Sonarqube と Nexus インスタンスをデプロイするためのものです。
+近くの参加者と見比べると、全員がそれぞれ固有の dev-tools Application を持っていることに気づくはずです。
+同じ Argo CD インスタンス内で、同名の Application を複数持てるのはなぜでしょうか？
 
-To understand this, we are going to look at this and Argo CD RBAC in more depth in the subsequent sections.
+これを理解するため、次のセクションで Argo CD RBAC も含めて詳しく見ていきます。
 
 [#argocd-deep-dive]
 == Argo CD Deep Dive
 
 === Argo CD CLI
 
-We wil use the ArgoCD CLI to explore the Shared GitOps in more detail. A secret has been pre-created in the `{user}-argocd`
-namespace called `argocd-cli` that provides the credentials needed to login into Argo CD.
+ArgoCD CLI を使って Shared GitOps をより詳しく確認します。
+`{user}-argocd` namespace には、Argo CD にログインするための認証情報を含む argocd-cli という secret が事前作成されています。
 
 [NOTE]
-Normally when using Argo CD with OIDC the login would be done with using the `--sso` switch
-which starts up a local web server to handle the OIDC callback on localhost. However since
-our terminal is running in a pod in OpenShift this is not possible. Therefore a local account, `{user}-cli`, has been pre-created
-with identical permissions to the SSO user. Normally local accounts in Argo CD should only
-be used for automation not for users.
+通常、OIDC を使う Argo CD のログインは `--sso` スイッチを使い、localhost 上で OIDC コールバックを処理するローカル Web サーバーを起動します。
+しかし、本ワークショップではターミナルが OpenShift 上の pod 内で動作しているため、この方法は使えません。
+そこで、SSO ユーザーと同一権限を持つローカルアカウント `{user}-cli` を事前に作成しています。
+通常、Argo CD のローカルアカウントはユーザー用途ではなく、オートメーション用途でのみ使用すべきです。
 
-To provision secret into the terminal as exported environment variables run the following
-commands:
+secret の値を環境変数としてターミナルに設定するため、以下のコマンドを実行します。
 
 [.console-input]
 [source,sh,subs="attributes",role=execute]
@@ -165,15 +135,14 @@ export ARGOCD_USERNAME=$(oc get secret argocd-cli -n {user}-argocd -o jsonpath="
 alias argocd='f(){ argocd "$@" --grpc-web;  unset -f f; }; f'
 ----
 
-The Argo CD CLI will use the specified environment variables automatically and not require an explicit login. Additionally
-the alias command at the end will ensure that when the `argocd` is called the parameter `--grpc-web` is automatically added. Since
-we are routing commands through the OpenShift Route this parameter is needed to avoid superfluous warnings.
+Argo CD CLI は指定した環境変数を自動的に利用するため、明示的な login は不要になります。
+また最後の alias により、`argocd` コマンドを呼び出す際に `--grpc-web` が自動付与されます。
+OpenShift Route を経由してコマンドを実行しているため、このパラメータにより不要な警告を避けられます。
 
 [IMPORTANT]
-If you restart the terminal interface you may need to run the above commands again in order to access Argo CD
-from the command line.
+ターミナルのインターフェースを再起動した場合、コマンドラインから Argo CD にアクセスするために、上記コマンドを再度実行する必要がある場合があります。
 
-Test the variables are set by using the Argo CD CLI to view the Applications that were shown in the user interface:
+環境変数が設定されたことを確認するため、CLI で UI に表示されていた Applications 一覧を表示します。
 
 [.console-input]
 [source,sh,subs="attributes",role=execute]
@@ -181,7 +150,7 @@ Test the variables are set by using the Argo CD CLI to view the Applications tha
 argocd app list
 ----
 
-The following output will be provided showing the application name, the sync and health status, the source and destination.
+以下の出力が表示され、アプリケーション名、sync と health のステータス、source と destination が確認できます。
 
 [.console-output]
 [source,bash,subs="attributes+,+macros"]
@@ -190,7 +159,7 @@ NAME                    CLUSTER     NAMESPACE   PROJECT  STATUS  HEALTH   SYNCPO
 {user}-argocd/dev-tools  in-cluster  {user}-cicd  {user}    Synced  Healthy  Auto        <none>      https://github.com/AdvancedDevSecOpsWorkshop/bootstrap.git  infra/dev-tools/overlays/default  HEAD
 ----
 
-A detailed view of the Application can be retrieved by using the `get` command:
+get コマンドで Application の詳細表示もできます。
 
 [.console-input]
 [source,sh,subs="attributes",role=execute]
@@ -198,7 +167,7 @@ A detailed view of the Application can be retrieved by using the `get` command:
 argocd app get {user}-argocd/dev-tools
 ----
 
-Various details of the Application are shown including a list of resources that the application is managing and their associated statuses.
+Application が管理しているリソース一覧と、それぞれのステータスなど、さまざまな情報が表示されます。
 
 [.console-output]
 [source,bash,subs="attributes+,+macros"]
@@ -234,30 +203,30 @@ apps.openshift.io   DeploymentConfig       {user}-cicd   postgresql-sonarqube   
 route.openshift.io  Route                  {user}-cicd   sonarqube                  Synced  Healthy        route.route.openshift.io/sonarqube created
 ----
 
-In addition to retrieving information about the Application, various tasks can be performed via the CLI including syncing, refreshing and modifying the Application. We
-will look at these in more depth in subsequent sections.
+CLI では Application の情報取得だけでなく、sync、refresh、変更などの操作も可能です。これらは後続セクションで詳しく扱います。
 
 === Argo CD Projects
 
-Argo CD link:https://argo-cd.readthedocs.io/en/stable/user-guide/projects/[Projects,window='_blank'] are used to group Applications together as well as manage
-permissions to the Applications and other Project scoped resources. Keep in mind that an Argo CD Project is different then an OpenShift Project despite using
-the same terminology. An OpenShift Project is represented by `kind: Project` in Kubernetes whereas an Argo CD Project is represented by `kind: AppProject`.
+Argo CD の link:https://argo-cd.readthedocs.io/en/stable/user-guide/projects/[Projects,window=’_blank’] は、
+Applications をグルーピングし、Applications や Project スコープの他リソースに対する権限を管理するために使われます。
+用語は同じでも、Argo CD Project は OpenShift Project とは異なる点に注意してください。
+OpenShift Project は Kubernetes の `kind: Project` で表現されますが、Argo CD Project は `kind: AppProject` で表現されます。
 
-While every Application in Argo CD must be associated with a Project, they are particularly useful when managing a multi-tenant Argo CD as the Project not
-only determines the user permissions but can also restrict what Applications associated with the Project can do. As per the
-documentation, an Argo CD Project can:
+Argo CD のすべての Application は必ずいずれかの Project に紐づく必要があります。
+特にマルチテナントの Argo CD を運用する場合、Project はユーザー権限を決めるだけでなく、その Project に紐づく Applications が「何をできるか」を制限できるため非常に有用です。
+ドキュメントによれば Argo CD Project では次のことが可能です。
 
-* restrict what may be deployed (trusted Git source repositories)
-* restrict where apps may be deployed to (destination clusters and namespaces)
-* restrict what kinds of objects may or may not be deployed (e.g. RBAC, CRDs, DaemonSets, NetworkPolicy etc...)
-* defining project roles to provide application RBAC (bound to OIDC groups and/or JWT tokens)
+* デプロイ可能なものを制限 (信頼できる Git source repositories)
+* デプロイ先を制限 (destination clusters と namespaces)
+* デプロイ可能／不可能なオブジェクト種別を制限 (例：RBAC、CRDs、DaemonSets、NetworkPolicy など)
+* project roles を定義して application RBAC を提供 (OIDC groups や JWT tokens に紐づけ)
 
 [IMPORTANT]
-Argo CD includes a `default` project when it is installed, it is strongly recommended that this never be used and administrators create
-Projects as needed to support their specific use cases.
+Argo CD はインストール時に `default` project を含みますが、これを使用しないことが強く推奨されます。
+管理者はユースケースに応じて必要な Projects を作成してください。
 
-In our Shared GitOps instance each workshop team, and thus user, has their own Project to manage access and restrictions for their Applications. To
-view your teams project, use the CLI to run the following command:
+本ワークショップの Shared GitOps インスタンスでは、各ワークショップチーム（＝各ユーザー）ごとに独自の Project があり、Applications のアクセス権と制約を管理しています。
+自分のチームの project を確認するには、以下を実行します。
 
 [.console-input]
 [source,sh,subs="attributes",role=execute]
@@ -265,7 +234,7 @@ view your teams project, use the CLI to run the following command:
 argocd proj list
 ----
 
-Notice that a single project is listed:
+単一の project が表示されることに気づくはずです。
 
 [.console-output]
 [source,bash,subs="attributes+,+macros"]
@@ -274,7 +243,7 @@ NAME   DESCRIPTION    DESTINATIONS    SOURCES  CLUSTER-RESOURCE-WHITELIST  NAMES
 {user}  {user} project  5 destinations  *        <none>                      <none>                        <none>          disabled
 ----
 
-A detailed view of the project is retrieved by using the `get` command:
+get コマンドで project の詳細を表示します。
 
 [.console-input]
 [source,sh,subs="attributes",role=execute]
@@ -308,47 +277,43 @@ Signature keys:              <none>
 Orphaned Resources:          disabled
 ----
 
-Notice that your user's Applications are limited to deploying to a specific set of namespaces, the `{user}-*` namespaces.
-This limitation on destinations ensures that Applications in this Project cannot deploy resources to other namespaces
-even though the underlying Argo CD application-controller has permissions to do so.
+ユーザーの Applications は `{user}-*` namespace のみへデプロイできるよう、destination が制限されている点に注目してください。
+この destination 制限により、たとえ Argo CD の application-controller 自体が他 namespace へデプロイできる権限を持っていても、この Project に属する Applications は他 namespace へはデプロイできません。
 
-Also note that we are denying access to some types of resources. All cluster scoped resources, i.e. resources without a namespace,
-are denied. Also note that we are denying access to specific namespace scoped resources such as ResourceQuota and LimitRange because
-it is the purview of the platform team to manage these resources.
+また、いくつかのリソース種別へのアクセスを拒否 (deny) している点にも注意してください。namespace を持たない cluster-scoped リソースはすべて拒否しています。
+さらに、ResourceQuota や LimitRange のような namespace-scoped リソースも拒否しています。
+これらは Platform チームの管掌で管理すべきリソースだからです。
 
-Finally some Argo CD resources, such as clusters and repositories, can be scoped globally or at a Project level. Scoping resources
-at a Project level can be useful in cases where the Argo CD administrator would like to enable self-service
-for application teams. In this workshop these resources are defined globally however if you would like to learn
-more about this capability the Argo CD documentation covers this topic in depth.
+最後に、clusters や repositories のような一部の Argo CD リソースは、グローバルまたは Project レベルでスコープ設定できます。
+Project レベルでスコープさせることは、Argo CD 管理者が application チーム向けにセルフサービスを可能にしたい場合に有用です。
+本ワークショップではこれらのリソースはグローバルで定義していますが、詳しくは Argo CD ドキュメントで詳細に解説されています。
 
 link:https://argo-cd.readthedocs.io/en/stable/user-guide/projects/#project-scoped-repositories-and-clusters[Project scoped Repositories and Clusters,window="_blank"]
 
 === Role Based Access Control
 
-Argo CD has it's own Role Based Access Control (RBAC) that is separate and distinct from Kubernetes RBAC. When users interact
-with Argo CD via the Argo CD UI, CLI or API the Argo CD RBAC is enforced. If users interact with Argo CD resources directly
-using the OpenShift Console or `kubectl`/`oc` then only the Kubernetes RBAC is used.
+Argo CD には、Kubernetes RBAC とは別に独立した Role Based Access Control (RBAC) があります。
+ユーザーが Argo CD UI、CLI、API を通じて Argo CD とやり取りする場合は Argo CD RBAC が適用されます。
+一方、OpenShift Console や `kubectl`/`oc` で Argo CD リソースを直接操作する場合は、Kubernetes RBAC のみが適用されます。
 
-Additionally the application-controller in Argo CD, as shown previously in the GitOps Architecture, interacts with the
-Kubernetes API and is governed by Kubernetes RBAC. Argo CD can only deploy and manage the Kubernetes resources that
-the application-controller has been given permission to use in Kubernetes RBAC.
+また、前述の GitOps Architecture で示したように、Argo CD の application-controller は Kubernetes API とやり取りし、その権限は Kubernetes RBAC によって制御されます。
+つまり、Argo CD がデプロイ／管理できる Kubernetes リソースは、application-controller に Kubernetes RBAC で許可された範囲に限られます。
 
-This relationship is shown in the following diagram:
+この関係は次の図で示されています。
 
 image::gitops/argocd-rbac.png[]
 
-The Argo CD RBAC is implemented using the link:https://casbin.org/docs/overview[Casbin, window="_blank"] library. Permissions
-are defined by creating roles and then assigning those roles to groups, or individual users, as needed. Argo CD includes
-two roles out of the box:
+Argo CD RBAC は link:https://casbin.org/docs/overview[Casbin, window=”_blank”] ライブラリで実装されています。
+権限は role を作成して定義し、その role をグループまたは個別ユーザーに割り当てます。
+Argo CD には標準で次の2つの role が含まれています。
 
-* role:readonly - provides read-only access to all resources
-* role:admin - allows unrestricted access to all resources
+* role:readonly - すべてのリソースに対する読み取り専用アクセス
+* role:admin - すべてのリソースに対する無制限アクセス
 
-Roles and permissions can be defined in two places, globally and on a per Project basis. It is strongly recommended that tenant
-roles and permissions be defined in the Project and global roles be reserved for Argo CD administrators and managing
-globally scoped resources.
+roles と permissions は、グローバル設定と Project ごとの設定の2箇所で定義できます。
+テナント向けの roles／permissions は Project 側で定義し、グローバル roles は Argo CD 管理者やグローバルスコープのリソース管理に限定することが強く推奨されます。
 
-As a developer, i.e. user of the workshop, you do not have access to view the global configuration, however this is what is defined:
+ワークショップ参加者（developer）であるあなたは、グローバル設定を見る権限はありませんが、設定内容は以下のようになっています。
 
 [.console-output]
 [source,bash,subs="attributes+,+macros"]
@@ -364,28 +329,23 @@ As a developer, i.e. user of the workshop, you do not have access to view the gl
   scopes: '[accounts,groups,email]'
 ----
 
-A few items to note about this global configuration:
+このグローバル設定についての注意点は以下です。
 
-* The first section is policies where we define roles and matching groups
-** We are defining an explicit role, `role:none`, that denies all permissions.
-** Users in the `cluster-admins` group are assigned to the `admin` role.
-** We define a role for developers that grants read access to global resources like clusters and repositories.
-** We assign the `developers` role to the `developers` group.
-* Next the `policy.default` is set to `role:none` so that users are denied access to resources by default with permissions needing to be explicitly enabled.
-* Scopes are set to include accounts, groups and email. Argo CD uses OIDC for authentication and this
-matches OIDC link:https://openid.net/specs/openid-connect-core-1_0.html#ScopeClaims[scopes, window="_blank"], scopes selected
-here can be used to match groups in the policy section.
+* 最初のセクションは policies で、roles と対応する groups を定義しています
+** すべての権限を拒否する明示的な role `role:none` を定義しています
+** `cluster-admins` グループのユーザーは `admin` role に割り当てられます
+** 開発者向けに、clusters や repositories といったグローバルリソースへの read アクセスを付与する role を定義しています
+** `developers` グループに `developers` role を割り当てています
+* `policy.default` を `role:none` に設定し、デフォルトではアクセス拒否、必要な権限は明示的に許可する方式にしています
+* scopes は accounts、groups、email を含むよう設定されています。Argo CD は OIDC で認証しており、ここで選択した OIDC link:https://openid.net/specs/openid-connect-core-1_0.html#ScopeClaims[scopes, window="_blank"] は policy のグループマッチングに利用されます
 
 [IMPORTANT]
-Any permissions given in the `policy:default` cannot be removed by additional roles using a `deny` permission hence why we
-set a role with no permissions.
+`policy.default` に与えた権限は、追加 role の `deny` で打ち消せません。そのため、ここでは権限を持たない role をデフォルトにしています。
 
 [NOTE]
-You can also set the `policy.default` to an empty string to accomplish
-the same effect as defining `role:none` however the author of this workshop personally prefers defining an explicit
-role to minimize possible confusion with regards to intent.
+`policy.default` を空文字にして、`role:none` を定義するのと同等の効果を得ることも可能ですが、本ワークショップの作者は意図の混乱を避けるために、明示的に role を定義する方を好んでいます。
 
-Now let's look at the RBAC defined in the Project that has been setup for your team and user:
+次に、あなたのチーム／ユーザー向けに用意された Project 内で定義されている RBAC を見てみましょう。
 
 [.console-input]
 [source,sh,subs="attributes",role=execute]
@@ -401,11 +361,11 @@ admin      TeamX admins
 pipeline   Pipeline accounts
 ----
 
-This shows that two roles are defined, `admin` and `pipeline`. The `admin` role is intended for
-users who will administer Applications in this Project. The `pipeline` role is intended
-for automation tools and will be used by OpenShift Pipelines in a later module.
+`admin` と `pipeline` の2つの role が定義されていることがわかります。
+`admin` role は、この Project 内の Applications を管理するユーザー向けです。
+`pipeline` role は自動化ツール向けで、後続モジュールで OpenShift Pipelines が利用します。
 
-Now look at how the roles are defined:
+role の定義内容を確認します。
 
 [.console-input]
 [source,sh,subs="attributes",role=execute]
@@ -430,37 +390,28 @@ p, proj:{user}:pipeline, applications, sync, {user}/*, allow
 g, {user}-pipeline, proj:{user}:pipeline
 ----
 
-Here we can see information about the role including policies, let's break
-down the first policy into it's constituent parts to understand how it is defined.
+role の情報 (policies など) が表示されます。
+最初の policy を要素に分解して、どのように定義されているかを理解しましょう。
 
 image::gitops/argocd-policy.png[]
 
-1. The letter `p` indicates that a policy is being defined, this is how we assign
-permissions to roles.
-2. Next is the role this policy will be part of. In this case
-it is the `admin` role which is scoped to Project `{user}`.
-3. Then the resource type for which we are giving permissions to, in this case `projects`. Various
-Argo CD resource types are supported including `applications`, `clusters`, and
-link:https://argo-cd.readthedocs.io/en/stable/operator-manual/rbac/#rbac-resources-and-actions[more, window="_blank"].
-4. After resource we define the actions for the policy, in this case a single action of `get`. Many
-different link:https://argo-cd.readthedocs.io/en/stable/operator-manual/rbac/#rbac-resources-and-actions[actions, window="_blank"]
-are available. A wildcard of `*` can be used which indicates all actions.
-5. Next is the specific Argo CD resource, this can be a wildcard like `*` for all resources or a named resource such as `{user}` in this case
-indicating the `{user}` Project. For resources like Applications that are scoped to Projects a notation of
-`<Project>/<Application>` can be used as shown in subsequent lines.
-6. Finally whether we `allow` or `deny` the permission.
+1. `p` は policy の定義を意味し、role に権限を付与するために使います。
+2. 次は、この policy が属する role です。この例では Project `{user}` にスコープされた admin role です。
+3. 次は権限を付与する対象リソース種別で、ここでは projects です。applications や clusters など、さまざまな Argo CD リソースがサポートされています。 (link:https://argo-cd.readthedocs.io/en/stable/operator-manual/rbac/#rbac-resources-and-actions[参考, window="_blank"])
+4. 次に action を指定します。ここでは get という単一 action です。link:https://argo-cd.readthedocs.io/en/stable/operator-manual/rbac/#rbac-resources-and-actions[様々なアクション, window="_blank"] が利用可能です。`*` を使うとすべての actions を意味します。
+5. 次に対象となる具体的な Argo CD リソースを指定します。`*` のようなワイルドカードも可能ですし、この例のように `{user}` という名前で `{user}` Project を指定することもできます。Project にスコープされた Applications の場合は、後続行のように `<Project>/<Application>` 形式を使えます。
+6. 最後に `許可 (allow)` か `拒否 (deny)` かを指定します。
 
-Once we have defined our role via policies we can then assign the policy to a group, this is indicated
-by a `g` at the start of the line. For example, the line `g, teamX, proj:{user}:admin` indicates we
-are assigning the project scoped role `admin` to the group `teamX`.
+policies によって role を定義したら、次にその role をグループへ割り当てます。
+これは行頭が `g` で示されます。
+例えば `g, teamX, proj:{user}:admin` は、Project スコープの `admin` role を `teamX` グループへ割り当てることを意味します。
 
-Note that what is considered a `group` for matching purposes is controlled by the `scope` that was
-reviewed earlier. While `groups` is the most commonly set scope, having scopes like `email`
-allows you to match roles to individual users. In a nutshell, when adding additional scopes, like `email`, these
-are treated as groups by Argo CD for matching purposes.
+どの属性を `group `として扱うかは、先ほど確認した `scope` 設定で制御されます。
+通常は `groups` が最も一般的ですが、`email` のような scope を含めると、個別ユーザーに role を紐づけることもできます。
+要点としては、`email` など追加した scope は、Argo CD のマッチング上 “group として扱われる” ということです。
 
-As discussed, the ability to view this basic project has been granted but
-not to modify or delete it. To confirm that, try deleting the Project:
+先ほど述べたとおり、この基本的な project は閲覧権限のみが付与されており、変更や削除はできません。
+確認のため、Project の削除を試してみます。
 
 [.console-input]
 [source,sh,subs="attributes",role=execute]
@@ -474,21 +425,19 @@ argocd proj delete {user}
 FATA[0000] rpc error: code = PermissionDenied desc = permission denied: projects, delete, user1, sub: user1-cli, iat: 2024-07-30T17:14:43Z
 ----
 
-As expected we were denied permission to delete the Project. Again as a reminder the Argo RBAC is only used when you interact with
-Argo CD via its UI or CLI. If you have permissions on the `AppProject` kind in the Argo CD namespace you could delete the resource
-with `oc delete appproject {user} -n gitops` and the Argo CD RBAC would never be checked,
+想定どおり、Project の削除権限がないため拒否されました。
+繰り返しになりますが、Argo CD RBAC が適用されるのは Argo CD の UI / CLI 経由で操作した場合のみです。
+もし Argo CD namespace 内の `AppProject` kind に対する権限があれば、`oc delete appproject {user} -n gitops` でリソースを削除でき、その場合 Argo CD RBAC は一切チェックされません。
 
-This inability to let users interact with resources in the Argo CD namespace is a challenge when you want to give users the ability to
-declaratively manage Applications instead of managing them imperatively via the UI or CLI, fortunately
-Argo CD has you covered as we will see in the next module.
+この「Argo CD namespace のリソースをユーザーに触らせられない」という点は、UI/CLI の命令的な管理ではなく、宣言的に Applications を管理させたい場合に課題になります。
+ですが Argo CD にはこの課題を解決する仕組みがあり、次のモジュールで確認します。
 
 === Apps in Any Namespace
 
-You may have noticed a subtle difference between the Cluster and Shared instancs of GitOps in that
-the Application names in the shared instance are prefixed with a namespace where as the Cluster Applications
-are not.
+Cluster と Shared の GitOps インスタンスで、微妙な違いに気づいたかもしれません。
+Shared インスタンスでは Application 名に namespace がプレフィックスとして付いているのに対し、Cluster 側の Applications はそうなっていません。
 
-Run the following command again:
+次のコマンドをもう一度実行します。
 
 [.console-input]
 [source,sh,subs="attributes",role=execute]
@@ -496,7 +445,7 @@ Run the following command again:
 argocd app list
 ----
 
-The following output will be provided, notice that the Application name consists of two parts using the format `<Namespace>/<Application Name>`:
+以下の出力が表示され、Application 名が `<Namespace>/<Application Name>` 形式の2要素で構成されていることがわかります。
 
 [.console-output]
 [source,bash,subs="attributes+,+macros"]
@@ -505,22 +454,25 @@ NAME                    CLUSTER     NAMESPACE   PROJECT  STATUS  HEALTH   SYNCPO
 {user}-argocd/dev-tools  in-cluster  {user}-cicd  {user}    Synced  Healthy  Auto        <none>      https://github.com/AdvancedDevSecOpsWorkshop/bootstrap.git  infra/dev-tools/overlays/default  HEAD
 ----
 
-The reason why is that we are using the link:https://argo-cd.readthedocs.io/en/stable/operator-manual/app-any-namespace[Apps in Any Namespace,window='_blank'] feature. Traditionally,
-Argo CD requires that Application resources be in the same namespace as the Argo CD installation. Apps in Any Namespace allow applications to exist in other
-namespaces and provides a mechanism to isolate team's Applications in a multi-tenant Argo CD instance.
+これは link:https://argo-cd.readthedocs.io/en/stable/operator-manual/app-any-namespace[Apps in Any Namespace,window=’_blank’] 機能を使っているためです。
+従来、Argo CD は Application リソースが Argo CD インストールと同一 namespace に存在することを要求します。
+Apps in Any Namespace を使うと、Applications を別の namespace に置けるようになり、マルチテナント Argo CD インスタンスでチームごとの Applications を分離する仕組みを提供します。
 
-This addresses an important limitation of having all Applications in the same namespace where users cannot be allowed to declaratively manage their Application resources. If they were permitted to do so, they
-could easily bypass the security provided by Argo CD Projects simply by assigning any Project to the Application by creating or modifying it using Kubernetes APIs (i.e. oc apply, oc edit).
-This problem arises because Argo CD RBAC is only enforced when using the Argo UI or CLI, it is not enforced by Kubernetes.
+この機能は、すべての Applications を同一 namespace に置く場合の重要な制約を解消します。
+もしユーザーに Application リソースを宣言的に管理させてしまうと、Kubernetes API (例：oc apply、oc edit) で Application を作成・変更するだけで、
+任意の Project を割り当てられてしまい、Argo CD Projects が提供するセキュリティを容易に回避できてしまいます。
+これは、Argo CD RBAC が UI/CLI 経由でしか適用されず、Kubernetes 側では適用されないために起きる問題です。
 
-The Apps in Any Namespace feature avoids this issue by requiring the platform team to bind a specific Argo CD Project to each specific namespace
-where Applications reside. In this workshop this means the `user1-argocd` namespace is automatically bound to Project `user1`, `user2-argocd` namespace to `user2`, etc.
+Apps in Any Namespace はこの問題を避けるため、Platform チームが「Applications が存在する namespace」と「紐づく Argo CD Project」を固定でバインドすることを要求します。
+本ワークショップでは、`user1-argocd` namespace は Project `user1` に、`user2-argocd` namespace は `user2` に… というように自動でバインドされます。
 
-The namespace being included as part of the Application name is a subtle indication that Apps in Any Namespace is being used
+Application 名に namespace が含まれていることは、Apps in Any Namespace が使われていることを示します。
 
-To configure Apps in Any Namespace there are two places where the source namespaces for Applications must be configurd. The
-first is as a startup parameter for the Argo CD instance, with the OpenShift GitOps operator this is determined by the `sourceNamespaces`
-field in the ArgoCD CR. Use the following command to see additional information about the field:
+Apps in Any Namespace を構成するには、Applications の source namespaces を許可する設定を2箇所で行う必要があります。
+
+1つ目は Argo CD インスタンスの起動パラメータです。
+OpenShift GitOps operator を使う場合、ArgoCD CR の `sourceNamespaces` フィールドで決まります。
+次のコマンドでフィールド情報を確認できます。
 
 [.console-input]
 [source,sh,subs="attributes",role=execute]
@@ -542,27 +494,23 @@ DESCRIPTION:
     be created in
 ----
 
-This field takes an array of namespaces however wildcards can be used to reduce management effort. It is highly
-recommended when using Apps in Any Namespace to select a consistent naming pattern for these namespaces that
-is amenable to wildcards.
+このフィールドは namespace の配列を受け取りますが、管理負荷を下げるためにワイルドカードも使用できます。
+Apps in Any Namespace を使う場合、ワイルドカードに適した一貫した namespace 命名規則を採用することが強く推奨されます。
 
 [NOTE]
-The intent of this recommendation is so that this field can be set once and not need to be constantly
-updated as new tenants and users are on-boarded into the Shared instance. For example, avoid using
-`*-gitops` as your naming convention since this wildcard would also pickup the `openshift-gitops`
-namespace.
+この推奨の意図は、Shared インスタンスに新しいテナント／ユーザーをオンボードするたびに、このフィールドを頻繁に更新しなくて済むようにすることです。
+例えば `*-gitops` のような命名規則は避けてください。
+このワイルドカードは `openshift-gitops` namespace まで拾ってしまうためです。
 
-The second place to configure `sourceNamespaces` is in the Argo CD Project. This determines which
-namespaces, and correspondingly the Applications in that namespace, are associated with which Project.
-This ensures that when a user creates or modifies an Application in namespace X that it is always
-associated with Project Y even if the user tries to bypass security and select a different Project.
+2つ目は Argo CD Project 側での `sourceNamespaces` 設定です。
+これにより、「どの namespace (= その namespace 内の Applications) が、どの Project に関連付くか」が決まります。
+ユーザーがセキュリティ回避のために別 Project を選ぼうとしても、namespace X の Application は常に Project Y に紐づくよう強制できます。
 
-At the moment the Argo CD CLI does not support displaying the sourceNamespaces however they can be
-viewed in the UI. Switch to the Argo CD UI and navigate to "Settings > Projects" and select
-project {user}. You should see the sourceNamespaces defined as follows:
+現時点では Argo CD CLI は sourceNamespaces の表示をサポートしていませんが、UI では確認できます。
+Argo CD UI に切り替え、「Settings > Projects」へ移動して project `{user}` を選択してください。
+sourceNamespaces は次のように定義されているはずです。
 
 image::gitops/argocd-appproject-sourcenamespaces.png[]
 
 [NOTE]
-We have also enabled the ApplicationSet in Any Namespace feature as well however be
-aware that this feature is considered Technical Preview in OpenShift GitOps.
+本ワークショップでは ApplicationSet in Any Namespace 機能も有効化していますが、この機能は OpenShift GitOps では Technical Preview 扱いである点に注意してください。
