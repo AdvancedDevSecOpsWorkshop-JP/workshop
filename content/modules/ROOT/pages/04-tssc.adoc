@@ -3,54 +3,57 @@
 [#introduction]
 == Introduction
 
-This section will showcase how OpenShift Platform Plus (OPP) can be used to provide a comprehensive DevSecOps workflow, with a focus on Software Supply Chain Security throughout the entire process, from development to production.
-DevSecOps stands for Development, Security and Operations, and is a holistic approach that promotes continuous security within your DevOps practices. Our example will highlight capabilities such as defining CI/CD pipelines CD with security gates, image scanning and signing, secure storage in a Trusted registry, and deployment to secured clusters with advanced security monitoring and alerting.
+このセクションでは、OpenShift Platform Plus (OPP) を使って、開発から本番までの全プロセスを通じて Software Supply Chain Security を重視した、包括的な DevSecOps ワークフローをどのように実現できるかを紹介します。
 
-Let's examine all the components involved in such a DevSecOps pipeline to deploy our e-commerce application named Globex.
+DevSecOps は Development、Security、Operations の略で、DevOps の実践に「継続的なセキュリティ」を組み込むための包括的なアプローチです。
+本例では、セキュリティゲートを備えた CI/CD pipelines の定義、image scanning と signing、Trusted registry への安全な保管、そして高度なセキュリティ監視とアラートを備えたセキュアなクラスターへのデプロイといった機能を取り上げます。
+
+それでは、Globex という e-commerce アプリケーションをデプロイする DevSecOps pipeline に関わるコンポーネント全体を確認していきましょう。
 
 [#advanced-devsecops-pipeline]
 == Advanced DevSecOps Pipeline
 
-In this section, we will have a look at the end-to-end DevSecOps pipeline and explore the security gates that are provided in it.
+このセクションでは、エンドツーエンドの DevSecOps pipeline を確認し、その中で提供されるセキュリティゲートを探索します。
 
-* Login to the openshift console using user *{user}* and password *{password}* using this URL: {openshift_console_url}
+* この URL ({openshift_console_url}) にアクセスし、ユーザー *{user}*、パスワード *{password}* で OpenShift console にログインします。
 
-* In the openshift console left menu, Select the Administrator View, then click on *Pipelines -> Pipelines*, select Project *"{user}-cicd"*, as shown in the screenshot below.
+* OpenShift console の左メニューで Administrator View を選択し、*Pipelines -> Pipelines* をクリックします。続いて Project *”{user}-cicd”* を選択します (下図参照) 。
 
 image::/devsecops/pipelines.png[width=80%]
 
-*  Let's have a look at the more advanced devsecops pipeline called "app-globex-ui-pipeline". Click on the pipeline name to get a graphical view.
+* より高度な devsecops pipeline である `app-globex-ui-pipeline` を見てみましょう。pipeline 名をクリックするとグラフィカル表示が確認できます。
 
 image::/devsecops/pipeline-view.png[width=100%]
 
-* From the left side menu, select Pipelines -> Pipelines. In the right-side window, select the "PipelineRuns" tab, we can see that the pipeline hasn't been run yet.
+* 左側メニューから Pipelines -> Pipelines を選択します。右側ウィンドウで `PipelineRuns` タブを選ぶと、まだ pipeline が実行されていないことが確認できます。
 
-Before we do that, let's review the repositories in Gitea that will be used by this pipeline to deploy the application using OpenShift GitOps.
+実行する前に、この pipeline が OpenShift GitOps を使ってアプリケーションをデプロイするために参照する、Gitea 上のリポジトリを確認しておきましょう。
 
 === Login to Gitea to review the repositories
 
-We are using Gitea as our source control system for this workshop. To access Gitea, click on this URL: link:https://gitea-gitea.{openshift_cluster_ingress_domain}[window="_blank"], and then login using Keycloak. Do *not* login directly with {user} credentials.
+このワークショップでは、ソース管理システムとして Gitea を使用します。Gitea にアクセスするには、次の URL をクリックします: link:https://gitea-gitea.{openshift_cluster_ingress_domain}[window=”_blank”]
+その後 Keycloak でログインしてください。{user} の認証情報で直接ログインしないでください。
 
 image::/devsecops/gitea-login-with-sso.png[width=100%]
 
-When you login, your Keycloak account will be automatically linked with the pre-created {user} account giving you access to the existing source code repositories as shown below:
+ログインすると、Keycloak アカウントは事前作成済みの {user} アカウントと自動的にリンクされ、以下のように既存のソースコードリポジトリへアクセスできるようになります。
 
 image::/devsecops/gitea-repositories.png[width=100%]
 
-The pre-created repositories are as follows:
+事前作成されているリポジトリは以下のとおりです。
 
-* {user}/gitops - This has the GitOps manifests for the Application that are deployed across environments.
-* {user}/web-nodejs - The source code for the front-end Coolstore web application that our pipeline will be building.
-* {user}/workshop - The source content for this workshop including example files we used in previous modules.
+* {user}/gitops - 環境横断でデプロイされる Application の GitOps manifests を含みます。
+* {user}/web-nodejs - pipeline がビルドするフロントエンド Coolstore web アプリケーションのソースコードです。
+* {user}/workshop - 本ワークショップのコンテンツ（過去モジュールで使ったサンプルファイル含む）です。
 
 [NOTE]
-While these repositories will disappear when the workshop environment is terminated, you can review the public version of these in the GitHub organization here link:https://github.com/AdvancedDevSecOpsWorkshop[window="_blank"].
+これらのリポジトリはワークショップ環境の終了とともに消えますが、公開版は GitHub organization 上で確認できます: link:https://github.com/AdvancedDevSecOpsWorkshop[window=”_blank”]
 
 === Start the Pipeline
 
-We see that the pipeline hasn't been run yet, so let's trigger it using a "PipelineRun".
+pipeline が未実行なので、「PipelineRun」を使ってトリガーしましょう。
 
-* Now run this command to trigger the pipeline execution:
+* 次のコマンドを実行して pipeline を起動します。
 
 [.console-input]
 [source,sh,subs="attributes",role=execute]
@@ -58,91 +61,109 @@ We see that the pipeline hasn't been run yet, so let's trigger it using a "Pipel
 cat ~/workshop/content/modules/ROOT/examples/devsecops-pipelinerun.yaml | sed 's/$USERNUM/{usernum}/' | sed 's/$USER/{user}/' | sed 's/$SUBDOMAIN/{subdomain}/' | oc create -f - -n {user}-cicd
 ----
 
-Here's a look at the content of the pipelineRun used to trigger the pipeline. These are the main parameters that are used by the pipeline tasks to deploy the application:
+以下は、pipeline を起動するために使った pipelineRun の内容です。
+pipeline tasks がアプリケーションをデプロイする際に使用する主なパラメータが含まれています。
 
 [source,yaml,subs="+macros,attributes+"]
 ----
 include::ROOT:example$devsecops-pipelinerun.yaml[]
 ----
 
-* Let's observe the pipeline running. *Open the openshift URL, click on pipelines, then select PipelineRuns*
+* pipeline の実行状況を観察しましょう。*OpenShift の URL を開いて pipelines をクリックし、PipelineRuns を選択します。*
 
-This will take you to a diagram with the last pipeline execution. Let's now examine the different steps, and focus on the tasks that provide an extra layer of security. In you want more details, you can click on each task to see the logs.
+これにより直近の pipeline 実行を示す図が表示されます。
+ここから各ステップを確認し、特に追加のセキュリティ層を提供している task に注目します。
+より詳細が必要な場合は各 task をクリックしてログを確認できます。
 
 image::/devsecops/pipeline-group1.png[]
 
-In the early stages of the pipeline, we do a traditional source clone, then we verify the code using SonarQube.
+pipeline の初期段階では、通常どおりソースの clone を行い、その後 SonarQube を用いてコードを検証します。
 
-You can access your SonarQube instance to check the project using this URL below. If it's unresponsive just wait a bit longer and refresh, because sonarqube needs the projects to be created first:
+以下の URL から SonarQube インスタンスにアクセスし、プロジェクトを確認できます。
+もし応答がない場合は、まずプロジェクト作成が必要なため、少し待ってからリロードしてください。
 link:https://sonarqube-{user}-cicd.{openshift_cluster_ingress_domain}/projects[window="_blank"]
 
-* You should be able to see your project
+* プロジェクトが表示されるはずです。
 
 image::/devsecops/sonarqube-project.png[]
 
 
-* Go back to the pipelineRun view in OpenShift. Now, in the next stages, this is where we have implemented additional security layers that will be detailed below.
+* OpenShift の pipelineRun 画面に戻ります。次の段階から、追加のセキュリティ層が実装されており、以下で詳しく説明します。
 
 image::/devsecops/pipeline-group2.png[]
 
-*Build-sign-image*. Enhancing Security with Tekton Chains
+*Build-sign-image*. Tekton Chains によるセキュリティ強化
 
-This task is responsible for building a container image based from our source code, including any changes that were committed. The built container image, along with a new tag and a generated Software Bill of Materials (SBOM) is then pushed to our private quay registry on successful completion. An SBOM is a machine-readable, formally structured complete list of all the components, including modules and libraries, used/required to build a software solution. So, in simple words, a software bill of materials offers an insight into the makeup of an application developed using third-party commercial tools and open-source software.
+この task は、ソースコード (コミット済みの変更を含む) から container image をビルドします。
+完了後、ビルドされた container image は、新しいタグと生成された Software Bill of Materials (SBOM) とともに、プライベートな quay registry に push されます。
+SBOM とは、ソフトウェアソリューションのビルドに使用／必要となるコンポーネント（モジュールやライブラリを含む）を、機械可読で形式的に構造化した「完全な一覧」です。
+平たく言うと、サードパーティの商用ツールやオープンソースソフトウェアを使って構築されたアプリケーションが「何でできているか」を可視化するものです。
 
-This task also uses Tekton Chains, a Kubernetes Custom Resource Definition (CRD) controller, that is crucial in augmenting the supply chain security within our OpenShift Pipelines. This tool’s capacity to automatically sign task runs, and its adoption of advanced attestation formats like in-toto, bring a higher degree of trust and verification to our processes.
+この task はさらに Tekton Chains も使用します。
+Tekton Chains は Kubernetes Custom Resource Definition (CRD) controller であり、OpenShift Pipelines におけるサプライチェーンセキュリティを強化するうえで重要な役割を担います。
+task run を自動的に署名できること、そして in-toto のような高度な attestation (認証) 形式を採用していることにより、プロセスに対する信頼性と検証性がより高まります。
 
-This task is responsible for emitting two important TaskResults i.e. IMAGE_URL and IMAGE_DIGEST. Those parameters are very important because they are the ones that trigger Tekton Chains to create a digital signature for your container image.
+またこの task は、重要な TaskResults として IMAGE_URL と IMAGE_DIGEST を出力します。
+これらのパラメータは、Tekton Chains が container image のデジタル署名を作成するトリガーとなるため非常に重要です。
 
-Now let's have a look at the following tasks:
+続いて、以下の tasks を見ていきましょう。
 
 image::/devsecops/pipeline-group3.png[]
 
-*acs-image-check*. This task uses the roxctl CLI to check build-time violations of your security policies in your image. In this demo, we have set up a policy that verifies signatures on your container image. If this policy is enabled and your container image is unsigned or signed by non trusted source, the pipeline will fail. If the signature is available and is trusted, this pipeline task will complete successfully.
+*acs-image-check*. この task は roxctl CLI を使い、image に対してセキュリティポリシーの「ビルド時違反」をチェックします。このデモでは、container image の署名検証を行うポリシーを設定しています。ポリシーが有効で、image が未署名、または信頼されていない source による署名であれば pipeline は失敗します。署名が存在し、信頼できるものであれば、この task は成功します。
 
-*acs-image-scan*. The acs-image-scan uses the roxctl CLI to return the components and vulnerabilities found in the image. Any vulnerabilities that exist in packages embedded in the image will be reported.
+*acs-image-scan*. acs-image-scan は roxctl CLI を使い、image 内のコンポーネントと脆弱性を抽出します。image に含まれるパッケージに脆弱性がある場合、それらがレポートされます。
 
-*scan-export-sbom*. This task is responsible for scanning any vulnerabilities that exist in our SBOM and exports our SBOM to a externally accessible repository. For scanning, this task uses a 3rd-party tool called Grype which is a vulnerability scanner for container images and filesystems.
+*scan-export-sbom*. この task は、SBOM に含まれる脆弱性をスキャンし、SBOM を外部からアクセス可能なリポジトリへエクスポートします。スキャンには、container images と filesystems 向けの vulnerability scanner であるサードパーティツール Grype を使用します。
 
-That's it! You now have a deeper understanding of the Security capabilities that provide a Trusted Software Supply Chain (or DevSecOps approach), using OpenShift Pipelines (tekton chains), and Red Hat Advanced Cluster Security (Red Hat ACS).
+以上です！
+これで、OpenShift Pipelines (Tekton Chains) と Red Hat Advanced Cluster Security (Red Hat ACS) を利用して、Trusted Software Supply Chain (または DevSecOps アプローチ) を実現するセキュリティ機能について理解が深まったはずです。
 
 [NOTE]
-While this workshop is using OpenShift Pipelines for Continuous Integration (CI), any CI tool such as GitHub Actions, GitLab, Jenkins, etc is easily capable of integrating with the Red Hat technologies providing these capabilities. In fact if you run an `oc get task <task-name> -o yaml -n {user}-cicd` you will see that the task is simply running a bash script.
+このワークショップでは Continuous Integration (CI) に OpenShift Pipelines を使用していますが、GitHub Actions、GitLab、Jenkins などの CI ツールでも、同様に Red Hat の各技術と連携してこれらの機能を実現できます。
+実際に `oc get task <task-name> -o yaml -n {user}-cicd` を実行すると、task は単に bash script を実行しているだけであることがわかります。
 
 [#trusted-image-registry]
 == Trusted Image Registry
 
-Red Hat Quay is a trusted, geo-replicated, security enabled container registry that allows to scan container image for vulnerabilities, but also store the signed images with all their metadata, such as the generated SBOM files and the signatures. These assets can be used later on in the pipelines for verification and validation purposes, like we have seen in the previous pipeline.
+Red Hat Quay は、信頼できる geo-replicated かつセキュリティ機能を備えた container registry です。
+container image の脆弱性スキャンができるだけでなく、署名済み image を SBOM ファイルや署名などの metadata とともに保存できます。
+これらの資産は、前の pipeline のように、後段の pipeline で検証 (verification) や妥当性確認 (validation) に利用できます。
 
-Let's now have a look at container image in Quay, and verify that it has indeed been signed by the pipeline.
+それでは Quay 上の container image を確認し、pipeline によって署名されていることを検証しましょう。
 
-* In a new tab, Open the Quay URL: link:https://registry-quay-quay-operator.{openshift_cluster_ingress_domain}[window="_blank"]
+* 新しいタブで Quay URL を開きます: link:https://registry-quay-quay-operator.{openshift_cluster_ingress_domain}[window=”_blank”]
 
-* Select "Sign in with Keycloak" and login as user *"{user}"* and password *{password}*.
+* 「Sign in with Keycloak」を選択し、ユーザー *”{user}”*、パスワード *"{password}"* でログインします。
 
-Next, click the *"workshop{usernum}/globex-ui"* repository, and click on 'Tags' on the left side menu.
+次に、*“workshop{usernum}/globex-ui”* リポジトリをクリックし、左側メニューの「Tags」をクリックします。
 
 image::/devsecops/quay-tags.png[]
 
-We can now see all the history of that container image, with all tags, and the associated metadata. We can particularly see that this container image has a small checkmark next to it, hover it to check that it has been correctly signed by Tekton Chains with the DevSecOps pipeline was last run.
+ここで、タグの履歴と metadata を含む container image の履歴全体が確認できます。
+特に、対象の container image の横に小さなチェックマークが表示されているはずです。
+そこに マウスオーバー して、Tekton Chains が DevSecOps pipeline 実行時に正しく署名したことを確認してください。
 
-You can also click on the *"Show signatures"* button on the top-right side to reveal additional information about the image.
+また、右上の *“Show signatures”* ボタンをクリックすると、image に関する署名情報がさらに表示されます。
 
 image::/devsecops/quay-image-signed.png[]
 
-Quay also provides a summary of the vulnerabilities of the container image, but will save that for when we review Red Hat Advanced Cluster Security so let's skip to the next section.
+Quay は container image の脆弱性サマリーも提供しますが、Red Hat Advanced Cluster Security を確認する際に扱うため、ここでは次に進みます。
 
-That's it, you now have a better understanding of Quay capabilities to store the signed container images, along with the metadata such as SBOMs, signatures etc.
+以上で、Quay が署名済み container images を SBOM や signatures などの metadata とあわせて保存できることが理解できたと思います。
 
 [#validating-signatures]
 == Validating Signatures
 
 === Manual Verification
 
-We can validate the image signature with the sigstore utility called `cosign`. This validation can be performed in variety of ways, first let's validate the signature manually using the public signature.
+sigstore のユーティリティ `cosign` を使って image 署名を検証できます。
+検証方法はいくつかありますが、まずは公開鍵を使って手動で検証してみます。
 
-While cosign signature used to sign the image by Tekton Chains is stored in the `openshift-pipelines` namespace, a copy of the signature is available in the `{user}-cicd` namespace to support validation in the pipeline.
+Tekton Chains が image に署名する際に使用した cosign signature は `openshift-pipelines` namespace に保存されていますが、
+pipeline での検証を支援するため、署名のコピーが `{user}-cicd` namespace にも用意されています。
 
-To view the signature run the following:
+署名を確認するには、以下を実行します。
 
 [.console-input]
 [source,sh,subs="attributes",role=execute]
@@ -150,20 +171,21 @@ To view the signature run the following:
 oc get secret cosign-secret -o yaml -n {user}-cicd | oc neat
 ----
 
-You will then see the following:
+以下のような出力が表示されます。
 
 [source,yaml,subs="+macros,attributes+"]
 ----
 include::ROOT:example$globex-ui/templates/secret-cosign.yaml[]
 ----
 
-Notice there are three keys in the secret. `cosign.key` is the private key used to sign the image, `cosign.pub` is the public key used to validate the image and `cosign.password` is key for the password. All values
-are base64 encoded as per standard Kubernetes practices.
+secret には 3つの key がある点に注目してください。
+`cosign.key` は image 署名に使う秘密鍵、`cosign.pub` は検証に使う公開鍵、`cosign.password` はパスワード用の key です。
+値は Kubernetes 標準の慣習どおり base64 エンコードされています。
 
 [NOTE]
-To validate the image only the public key is required, we have included a copy of the full secret for illustrative purposes. It is highly recommended to restrict access to the private key and password in normal situations.
+image の検証には公開鍵のみが必要です。ここでは説明のために secret 全体のコピーを含めています。通常は秘密鍵とパスワードへのアクセスは厳格に制限することを強く推奨します。
 
-To get a local copy of the the public key we will use to validate the image execute the following:
+検証に使用する公開鍵をローカルに取得するため、次を実行します。
 
 [.console-input]
 [source,sh,subs="attributes",role=execute]
@@ -171,7 +193,7 @@ To get a local copy of the the public key we will use to validate the image exec
 oc get secret cosign-secret -o jsonpath="{.data['cosign\.pub']}" -n {user}-cicd | base64 -d > ~/cosign.pub
 ----
 
-Next verify that you retrieved the public key by viewing the file:
+取得できたことを確認するため、ファイルを表示します。
 
 [.console-input]
 [source,sh,subs="attributes",role=execute]
@@ -187,7 +209,7 @@ gN6OWsfUdhfT5TCf23ESE3vfuMWtX9syvjmemuGpZ+/fRDOyqAbVnAGNpQ==
 -----END PUBLIC KEY-----
 ----
 
-Finally use the `cosign` command to verify the image in the Quay image registry:
+最後に `cosign` コマンドで Quay image registry 上の image を検証します。
 
 [.console-input]
 [source,sh,subs="attributes",role=execute]
@@ -196,7 +218,7 @@ cosign verify --insecure-ignore-tlog=true --key ~/cosign.pub registry-quay-quay-
 ----
 
 [NOTE]
-The switch `--insecure-ignore-tlog=true` is added so that cosign bypasses checking the public transparency log. Tekton Chains is configured to use the transparency log deployed on the workshop cluster rather then the public instance, as a result the signature is never uploaded to the public transparency log that cosign uses by default. Without this switch the verification will fail
+`--insecure-ignore-tlog=true` は、cosign が public transparency log のチェックをバイパスするためのオプションです。Tekton Chains は、public instance ではなくワークショップクラスター上の transparency log を使うよう設定されているため、署名は cosign がデフォルトで参照する public transparency log にはアップロードされません。このオプションがないと検証は失敗します。
 
 [source,bash,subs="+macros,attributes+"]
 ----
@@ -211,20 +233,20 @@ The following checks were performed on each of these signatures:
 ----
 
 [NOTE]
-The `critical` shown in the output json at the end is highlighting the critical information, it is not indicating an error.
+最後の json 出力にある `critical` は「重要情報」を示しているだけで、エラーを意味するものではありません。
 
 === Verifying With a Transparency Log
 
-link:https://developers.redhat.com/products/trusted-artifact-signer/overview[Red Hat Trusted Artifact Signer (RHTAS),window="_blank"] provides a suite of tools to support
-image signing. These tools are primarily sourced from the upstream link:https://www.sigstore.dev[Sigstore,window="_blank"] project and include the following:
+link:https://developers.redhat.com/products/trusted-artifact-signer/overview[Red Hat Trusted Artifact Signer (RHTAS),window=”_blank”] は、image signing を支援するツール群を提供します。
+これらは主に upstream の link:https://www.sigstore.dev[Sigstore,window=”_blank”] プロジェクト由来で、以下を含みます。
 
-* *Certificate Transparency Log*: A certificate transparency log is a permanent and immutable ledger or record-keeping system for signing events that is immune to change and remains inaccessible to the public. The log can be queried for making informed decisions on the integrity and authenticity of an artifact, verification of a particular entry, or retrieval of entries.
-* *Certificate Authority*:  A certificate authority is a free root certification authority that issues short-lived, temporary certificates to an authorized identity and publishes them in a transparency log. It provides the option to use existing self-managed keys maintained in a third-party key management system.
-* *Sigstore Clients*: Command line utilities like `cosign` that we used earlier as well as other tools for generating and verifying digital signatures of source code, artifacts, software bills of materials, and container images.
+* *Certificate Transparency Log*: 署名イベントを記録する、恒久的かつ改ざん不可能な台帳（ledger）／記録システムです。ログは公開されず、変更の影響を受けません。アーティファクトの完全性・真正性について判断するため、特定エントリの検証や取得などに利用できます。
+* *Certificate Authority*:  認可された identity に対して短命（short-lived）な一時証明書を発行し、それを transparency log に公開する root certification authority です。第三者の key management system に保持された、既存の自己管理鍵を利用する選択肢も提供します。
+* *Sigstore Clients*: 先ほど使用した `cosign` のような CLI ユーティリティに加え、ソースコード、artifacts、SBOM、container images のデジタル署名の生成・検証に使う各種ツールを含みます。
 
-In this workshop RHTAS has been deployed in the cluster and Tekton Chains has been configured to automatically upload the metadata needed to verify the signature in the transparency log.
+本ワークショップでは、RHTAS がクラスターにデプロイされており、Tekton Chains は透明性ログで署名を検証できるよう必要な metadata を自動的にアップロードするよう設定されています。
 
-The first step is to set some environment variables so cosign will use the transparency log for verification:
+まず、cosign が transparency log を使って検証できるよう、環境変数を設定します。
 
 [.console-input]
 [source,sh,subs="attributes",role=execute]
@@ -240,7 +262,7 @@ export SIGSTORE_REKOR_URL=$COSIGN_REKOR_URL
 export REKOR_REKOR_SERVER=$COSIGN_REKOR_URL
 ----
 
-Next we will initialize and configure cosign as well as retrieve certificates from the various Sigstore components required for verification with the transparency log:
+次に、cosign の初期化と設定を行い、transparency log による検証に必要な Sigstore コンポーネントから証明書を取得します。
 
 [.console-input]
 [source,sh,subs="attributes",role=execute]
@@ -248,7 +270,7 @@ Next we will initialize and configure cosign as well as retrieve certificates fr
 cosign initialize
 ----
 
-Finally perform the actual verification by executing the following command:
+最後に、以下のコマンドで検証を実行します。
 
 [.console-input]
 [source,sh,subs="attributes",role=execute]
@@ -267,34 +289,35 @@ The following checks were performed on each of these signatures:
 [{"critical":{"identity":{"docker-reference":"registry-quay-quay-operator.{subdomain}/workshop{usernum}/globex-ui"},"image":{"docker-manifest-digest":"sha256:137f2141572bb833987dc04b58f4114d09e7a5d97d55b78ec8d064252d3f1020"},"type":"cosign container image signature"},"optional":null}]
 ----
 
-Notice that in this iteration the existence of the signature in the transparency log was verified which was not done previously.
+この実行では、先ほどは行っていなかった「transparency log 上で署名が存在することの検証」が行われている点に注目してください。
 
 === Verifying Signatures in Pipeline
 
-While manual verification is useful, ideally we want to bake this process into the Pipeline itself. This is done in the *verify-tlog-signature* step of the pipeline:
+手動での検証も有用ですが、理想的には pipeline 自体にこの検証を組み込みたいところです。これは pipeline の *verify-tlog-signature* ステップで実施しています。
 
 image::/devsecops/verify-tlog-signature.png[]
 
-Click on the *verify-tlog-signature* task, note that an identical verification to what was performed manually has been completed:
+*verify-tlog-signature* task をクリックすると、手動で実行したものと同等の検証が完了していることが確認できます。
 
 image::/devsecops/verify-tlog-signature-log.png[]
 
-This verification is performed every time the image is built, however in a later section we will look at how we can inform and enforce a signature requirement through a Policy. However
-before we do that, now that we have built the image and verified its signature, let's deploy the front-end application.
+この検証は image をビルドするたびに実行されます。
+後続セクションでは、Policy によって署名必須要件を通知・強制する方法も見ていきます。
+ただその前に、image のビルドと署名検証が完了したので、フロントエンドアプリケーションをデプロイしましょう。
 
 [#deploying-web-application-gitops]
 == Deploying Web Application
 
 === Using overlays and Kustomize in the DevSecOps pipeline
 
-A common pattern when deploying an application to multiple environments is to have a a repository that contains the following structure:
+複数の環境へアプリケーションをデプロイする際の一般的なパターンとして、以下のような構造を持つリポジトリを用意します。
 
 * *base*: the common assets that we want to deploy
 * *overlays*:
-    ** *dev*: specific values that will override the ones in the base for the "dev" environment
-    ** *prod*: specific values that will override the ones in the base for the "prod" environment
+    ** *dev*: 「dev」環境向けに base の値を上書きする値
+    ** *prod*: 「prod」環境向けに base の値を上書きする値
 
-Let's deploy these applications using an ApplicationSet as we did previously but this time we will use a git generator.
+以前と同様に ApplicationSet を使ってアプリケーションをデプロイしますが、今回は git generator を使用します。
 
 [.console-input]
 [source,sh,subs="attributes",role=execute]
@@ -302,7 +325,7 @@ Let's deploy these applications using an ApplicationSet as we did previously but
 sed 's/$USER/{user}/' ~/workshop/content/modules/ROOT/examples/web-nodejs-appset.yaml | sed 's/$SUBDOMAIN/{subdomain}/' | oc apply -f - -n {user}-argocd
 ----
 
-Let's have a quick look at our new ApplicationSet:
+新しく作成した ApplicationSet を簡単に確認します。
 
 [.console-input]
 [source,sh,subs="attributes",role=execute]
@@ -358,14 +381,14 @@ spec:
         automated:
           prune: true
 ----
-<1> We are using the git generator to create an Application for every directory in the target repository and path
-<2> The target path, each sub-directory in this path will be used to create an application. In our case the `dev` and `prod` overlays
-<3> The target repository
-<4> Additional values to pass to the template
-<5> The basename of the path for which the Application is being generated, either `dev` or `prod` in this case
-<6> the full path in the repo for the current directory
+<1> git generator を使用し、対象リポジトリ／パス配下の各ディレクトリごとに Application を作成します
+<2> 対象パス。ここ配下の各サブディレクトリを使って application を作成します (この例では `dev` と `prod` overlays)
+<3> 対象リポジトリ
+<4> template に渡す追加 values
+<5> Application を生成する対象パスの basename (この例では `dev` または `prod`)
+<6> 現在のディレクトリに対応する、リポジトリ内のフルパス
 
-Check that the Applications have been created:
+Applications が作成されたことを確認します。
 
 [.console-input]
 [source,sh,subs="attributes",role=execute]
@@ -385,205 +408,213 @@ pipeline-helm        Synced        Healthy
 ----
 
 [NOTE]
-The `app-prod` application may be `Progressing` for awhile or show as `Degraded`, this is because we have not yet deployed the updated
-image generated by the Pipeline in production. We will perform this step in the next section.
+`app-prod` がしばらく `Progressing` のまま、または `Degraded` と表示されることがあります。
+これは、本番環境に対して Pipeline が生成した更新 image をまだデプロイしていないためです。
+このステップは次のセクションで実施します。
 
-We can verify that the applications have been created in the Shared OpenShift GitOps by checking the Application tiles.
+Shared OpenShift GitOps の Application タイルを見て、作成されたことを確認できます。
 
-* Go to OpenShift GitOps and select the "app-dev" application in the main page to access the details.
+* OpenShift GitOps に移動し、トップページで "app-dev" application を選択して詳細を開きます。
 
-* On the top-left side, click on *"App details"* to access the information about the application, such as the git repository, the branch where the files are located, the target cluster and namespace where the application is deployed, etc.
+* 左上の *"App details"* をクリックすると、git リポジトリ、ファイルが置かれている branch、デプロイ先の target cluster と namespace などを確認できます。
 
-If we pay closer attention, there are 3 items worth mentioning to understand the multi-environment management:
+複数環境を管理するうえで、理解しておくべきポイントが3つあります。
 
-* *REPO_URL:* the git repository where our the resources we want to deploy are defined
+* *REPO_URL:* デプロイ対象リソースが定義されている git リポジトリ
 
-* *TARGET REVISION:* the branch to use
+* *TARGET REVISION:* 使用する branch
 
-* *PATH:* the folder that contains the specific values for that environment. Here for example, for the "DEV" environment, we use the file located in "globex/overlays/dev".
+* *PATH:* 環境固有の値を含むフォルダ。たとえば "DEV" では "globex/overlays/dev" を使用します。
 
-You can see more details by opening the "gitops" repository in gitea, and navigating to "globex" folder.
+より詳細は Gitea の "gitops" リポジトリを開き、"globex" フォルダへ移動して確認できます。
 
 image::/devsecops/app-details-dev.png[]
 
 === Adopting a GitOps approach for deployments across multiple namespaces
 
-As mentioned in the application architecture section, our "Globex" application would be deployed across multiple namespaces or clusters using OpenShift GitOps.
+アプリケーションアーキテクチャのセクションで述べたとおり、"Globex" アプリケーションは OpenShift GitOps を使って複数の namespaces や clusters にまたがってデプロイされます。
 
-Let's explore this step in the pipeline, then have a look at argocd to understand how it uses the manifests to target the desired namespace.
+ここでは pipeline の該当ステップを確認し、その後 argocd 側で manifests を使って目的の namespace をどのようにターゲットにしているかを見ていきます。
 
-* On the OpenShift console, on the left menu, Select Pipelines -> Pipelines, and select the pipelineRun with the "Succeeded" status (the same one as in the previous section).
+* OpenShift console の左メニューで Pipelines -> Pipelines を選択し、ステータスが "Succeeded" の pipelineRun を選びます。 (前セクションと同じもの)
 
 image::/devsecops/pipeline-group-4.png[]
 
-* *update-dev-manifest*: This task is responsible for updating the manifests in the git repository, by updating the container image reference in the deployment yaml file, using Kustomize. This is a common approach when using tools like OpenShift GitOps. Let's have a look at the yaml file in Gitea.
+* *update-dev-manifest*: この task は、git リポジトリ内の manifests を更新します。具体的には、Kustomize を使って deployment yaml の container image 参照を更新します。これは OpenShift GitOps のようなツールと組み合わせる際によく用いられる手法です。Gitea 上の yaml ファイルを見てみましょう。
 
-* Open Gitea's URL: link:https://gitea-gitea.{openshift_cluster_ingress_domain}[window="_blank"]
+* Gitea の URL を開きます: link:https://gitea-gitea.{openshift_cluster_ingress_domain}[window="_blank"]
 
-* Login using the provided credentials: username: *{user}*, password: *openshift*.
+* 提供された認証情報でログインします: username: *{user}*, password: *openshift*.
 
-* Click on the last commit id, as shown in the screenshot below:
+* 下図のように、最後の commit id をクリックします。
 
 image::/devsecops/gitea-commit-id.png[]
 
-* Take a look at the changes about the container image tag, as seen below. Because OpenShift GitOps is constantly monitoring that GitOps repository, any update to the yaml file triggers a reconciliation with the target DEV environment, namely the {user}-dev namespace, where the application get re-deployed.
+* 下図のように container image tag が更新されていることを確認します。OpenShift GitOps は GitOps リポジトリを継続監視しているため、yaml ファイル更新があると、ターゲットの DEV 環境（つまり {user}-dev namespace）へ reconcile が走り、アプリケーションが再デプロイされます。
 
 image::/devsecops/gitea-updated-manifest.png[]
 
-Let's now switch to OpenShift GitOps to see how the application gets deployed in the DEV namespace.
+次に OpenShift GitOps へ切り替え、DEV namespace にどのようにデプロイされるか確認します。
 
-* Open the OpenShift GitOps URL: link:https://argocd-server-gitops.{openshift_cluster_ingress_domain}[window="_blank"]
+* OpenShift GitOps URL を開きます: link:https://argocd-server-gitops.{openshift_cluster_ingress_domain}[window="_blank"]
 
-* Select Login via Keycloak, and login as user *"{user}"* with password *openshift*
+* Keycloak によるログインを選択し、ユーザー *"{user}"*、パスワード *openshift* でログインします
 
-* OpenShift GitOps uses a concept of an *"Application"* as a group of manifests stored in a git repository that need to be deployed altogether.
+* OpenShift GitOps は、git リポジトリに保存された manifests の集合を、まとめてデプロイする単位として *"Application"* という概念を使います。
 
 image::/devsecops/argocd-applications.png[]
 
-Notice that the `app-dev` and `app-prod` Applications are targeted to different namespaces, `{user}-dev` and `{user}-prod`. They could just as easily be targeted to different clusters as well since it is common in many organizations to have separate clusters for non-production versus production.
+`app-dev` と `app-prod` の Applications が、それぞれ `{user}-dev` と `{user}-prod` の別 namespace をターゲットにしている点に注目してください。
+多くの組織では non-production と production を別クラスターに分けることも一般的なので、同様に別クラスターをターゲットにすることも可能です。
 
 === Deploying to production using a Pull Request in Gitea
 
-We have deployed the same application to the "PROD" environment using the app-prod Application in OpenShift GitOps. The main difference is that the prod version is using "globex/overlays/prod" for the specific values required for production.
+OpenShift GitOps の app-prod Application を使って、同じアプリケーションを "PROD" 環境にもデプロイしています。主な違いは、prod 側が production 用の値を含む "globex/overlays/prod" を使用している点です。
 
-It is common to have a "manual approval", i.e. "gating", for deploying into a production environment, and in our case, we'll be using a Pull Request to approve the change to the PROD manifests located in "globex/overlays/prod".
+production へデプロイする際には、「手動承認（manual approval）」つまり「gating」を設けるのが一般的です。
+ここでは Gitea の Pull Request を使って、"globex/overlays/prod" にある PROD manifests の変更を承認します。
 
-The pipeline execution has already created the pull request in the last steps, so let's review it in gitea and merge it to initiate the deployment in the "{user}-prod" namespace through GitOps.
+pipeline 実行の最終ステップで Pull Request はすでに作成されているので、gitea で確認して merge し、GitOps により "{user}-prod" namespace へのデプロイを開始しましょう。
 
-* Open Gitea, select the *gitops* repository and click on *Pull Requests* as seen below:
+* Gitea を開き、*gitops* リポジトリを選択し、以下のように *Pull Requests* をクリックします。
 
 image::/devsecops/gitea-pull-request.png[]
 
-Click on the pull request and then click on Create Merge Commit, and select create commit:
+Pull Request をクリックし、「Create Merge Commit」をクリックしてから create commit を選択します。
 
 image::/devsecops/gitea-merge-commit.png[]
 
-* In the Pull Request details, click on *Files Changed*, and you should see that we have updated the image reference for the prod environment, as seen below:
+* Pull Request の詳細で *Files Changed* をクリックすると、以下のように prod 環境向けの image 参照が更新されていることが確認できます。
 
 image::/devsecops/gitea-merge-changes.png[]
 
-* Close the application details window, and explore the application page to see all the kubernetes resources that are deployed by OpenShift GitOps to the target cluster / namespace, such as the deployments, the services, etc.
+* application details ウィンドウを閉じ、application ページで、OpenShift GitOps がターゲット cluster / namespace にデプロイした Kubernetes リソース（deployments、services など）を確認します。
 
 [NOTE]
-It may take a couple of minutes for Argo CD to pick up the change, you can accelerate the process by clicking the `Refresh` button in the Shared instance for the `app-prod` Application.
+Argo CD が変更を検知するまで数分かかる場合があります。Shared インスタンスで `app-prod` Application の `Refresh` ボタンをクリックすると処理を早められます。
 
-* Let's see the same resources deployed in the application namespace *{user}-prod* with this URL: link:{openshift_console_url}/topology/ns/{user}-prod?view=graph[window="_blank"]
+* 次の URL で、application namespace *{user}-prod* にデプロイされた同じリソースを確認できます: link:{openshift_console_url}/topology/ns/{user}-prod?view=graph[window="_blank"]
 
-* Let's open the application to verify that it is running as expected:
+* アプリケーションを開いて、期待どおり動作していることを確認します。
 
 image::/devsecops/globex-ui.png[]
 
-That's it, you now have a better understanding of how the DevSecOps pipeline is combined with OpenShift GitOps for a multicluster deployment of the "Globex" application.
+以上で、DevSecOps pipeline と OpenShift GitOps を組み合わせて「Globex」アプリケーションを multicluster（/multi-environment）にデプロイする流れが理解できたはずです。
 
 [#using-security-policies]
 == Using Security Policies in Red Hat Advanced Cluster Security (Red Hat ACS)
 
 === Review Trusted Signature Policy
 
-* Open the Red Hat ACS console at link:https://central-stackrox.{openshift_cluster_ingress_domain}[window="_blank"]
+* Red Hat ACS console を開きます: link:https://central-stackrox.{openshift_cluster_ingress_domain}[window="_blank"]
 
-* Choose the "Keycloak" auth provider as shown below:
+* 下図のように "Keycloak" auth provider を選択します。
 
 image::/devsecops/acs-keycloak.png[]
 
-* Login with Keycloak: username *{user}* and password *{password}*.
+* Keycloak でログインします: username *{user}* and password *{password}*.
 
-* Once you are on the Red Hat ACS console, select "Platform Configuration -> Policy Management" from the left-side menu. This should take you to the policies page.
+* Red Hat ACS console に入ったら、左メニューから "Platform Configuration -> Policy Management" を選択します。policies ページが表示されます。
 
 image::/devsecops/acs-policies.png[]
 
-Red Hat ACS provides about 85 out-of-the-box policies to help implement security best practices and safeguards across your fleets of clusters, you can explore some of them by scrolling through the list of policies.
+Red Hat ACS には、複数クラスター群（fleets of clusters）全体にわたるセキュリティベストプラクティスと保護策の実装を支援する、約 85 の out-of-the-box policies が用意されています。
+リストをスクロールしていくつか確認できます。
 
-* Let's now look at the "Trusted Image Signature" policy. In the "Filter policies" section, type "Policy" then hit enter, then type "Trusted Signature".
+* 次に "Trusted Image Signature" policy を見てみましょう。"Filter policies" で "Policy" と入力して Enter を押し、続いて "Trusted Signature" と入力します。
 
 image::/devsecops/acs-trusted-signature-policy.png[]
 
-* Click on the policy to check its details:
+* policy をクリックして詳細を確認します。
 
 image::/devsecops/acs-trusted-signature-policy-details.png[]
 
-In the "Policy details" section the metadata and the Severity level and some other information is defined.
+"Policy details" セクションでは、metadata、Severity レベルなどの情報が定義されています。
 
 image::/devsecops/acs-policy-details-section.png[]
 
-The section "Policy Behavior" is where you can define when and how the policy gets applied.
+"Policy Behavior" セクションでは、policy が「いつ」「どのように」適用されるかを定義できます。
 
 image::/devsecops/acs-policy-behavior-section.png[]
 
-The "Lifecycle stages" allow you to define if it's applied at Build, Deploy or Runtime. For this Policy, Build and Deploy stages have been chosen:
+"Lifecycle stages" では、Build、Deploy、Runtime のどの段階で適用するかを指定できます。この Policy では Build と Deploy が選択されています。
 
-The response method provides 2 options:
+response method には2つのオプションがあります。
 
-* *Inform*: the policy only triggers an alert but is not enforced, meaning it takes no specific action.
-* *Inform and enforce*: The policy triggers an alert AND is enforced, for example deleting a container that violates a specific policy, or in our previous case by breaking the pipeline because the container image was not signed with a trusted signature.
+* *Inform*: policy はアラートを出すだけで強制（enforce）はしません。つまり具体的なアクションは取りません。
+* *Inform and enforce*: policy はアラートを出しつつ強制します。例えば、ポリシー違反の container を削除する、または前の例のように trusted signature がないため pipeline を失敗させる、といった動作です。
 
-Finally, the "Enforce" gives you control over how the policy gets enforced, as explained in the different options.
+最後に "Enforce" では、どのように強制するかを各オプションで制御できます。
 
-The Policy Scope section at the bottom enables you to control the scope of the policy by selecting the required clusters and namespaces. Wildcards are supported as well selection via labels.
+ページ下部の Policy Scope セクションでは、対象 cluster や namespace を選択して policy のスコープを制御できます。ワイルドカードも利用でき、labels による選択も可能です。
 
-* Next, click on "View" in the "Policy Criteria" section to explore how the signature verification is implemented.
+* 次に "Policy Criteria" セクションの "View" をクリックし、署名検証がどう実装されているかを確認します。
 
 image::/devsecops/acs-policy-criteria-section.png[]
 
-* In the pop-up, click on "cosign", and this will take you to the public signature that is used to verify the container image, in pair with the private signature that is used by OpenShift Pipelines / Tekton Chains to sign the container images after the build. We will talk about the image signing process in more details in the next section.
+* ポップアップで "cosign" をクリックすると、container image を検証するために使用される公開鍵署名へ移動します。これは、OpenShift Pipelines / Tekton Chains がビルド後に container images を署名する際に使用する秘密鍵署名と対になります。署名プロセスは次のセクションで詳しく説明します。
 
 image::/devsecops/acs-signature-integration.png[]
 
 === Viewing Policy Violations
 
-Now that we have reviewed the policy, let's see review the policy violations for this policy.
+policy を確認したので、この policy に関する違反（violations）を見てみましょう。
 
-* Click on `Violations` in the left sidebar and then in the filter add a filter for the `Trusted Signature Policy`
+* 左サイドバーの `Violations` をクリックし、フィルタに `Trusted Signature Policy` を追加します。
 
 image::/devsecops/acs-policy-violations.png[]
 
-* Notice all of the images violate this policy except for the `globex-ui` image which we just built with the Pipeline with a valid and verified signature.
+* `globex-ui` image を除き、他の images はこの policy に違反していることに気づくはずです。`globex-ui` は pipeline によってビルドされ、正しく署名が付与され検証済みだからです。
 
 [NOTE]
-If you are wondering why signature violations are not appearing from other namespaces, this Policy has been scoped to the `{user}-dev` and `{user}-prod` namespaces. Additionally ACS
-has been configured for multi-tenancy so that your user only has permissions to view data generated from the namespaces and clusters you have been granted access to.
+他の namespaces の署名違反が表示されないのは、この Policy が `{user}-dev` と `{user}-prod` namespaces にスコープされているためです。
+さらに ACS は multi-tenancy として構成されており、あなたのユーザーは許可された namespaces と clusters に由来するデータのみ閲覧できます。
 
 === Viewing Vulnerabilities
 
-Let's now see how Red Hat ACS allows you to monitor your cluster security, by inspecting image vulnerabilities.
+次に Red Hat ACS が、image vulnerabilities の確認を通じてクラスターセキュリティをどのように監視できるかを見ていきます。
 
-* On the left-side menu, click on "Vulnerability Management -> Workloads CVEs", then select Images in the filter.
+* 左メニューで "Vulnerability Management -> Workloads CVEs" をクリックし、フィルタで Images を選択します。
 
 image::/devsecops/acs-vuln-management2.png[]
 
-* In the filter section, type "Image" then hit enter, then type "globex-ui:main", and select the one that appears in the drop-down.
+* フィルタ欄に "Image" と入力して Enter、続けて "globex-ui:main" と入力し、ドロップダウンに出てきたものを選択します。
 
 image::/devsecops/acs-image-cves2.png[]
 
-Click on the `globex-ui:main` image highlighted above and this will take you to the image details, where you see a listing of all CVEs, all components, and all the deployments (in `Resources` tab) that are using this image. This helps you understand and mitigate issues when there's a compromised image for example.
+上でハイライトされている `globex-ui:main` image をクリックすると、image details に移動します。
+ここでは CVEs の一覧、components の一覧、そして (`Resources` タブで) この image を使用している deployments の一覧が確認できます。
+たとえば image が侵害されたような状況で、影響範囲を把握し緩和策を講じるのに役立ちます。
 
 image::/devsecops/acs-image-details2.png[]
 
 [NOTE]
-Red Hat Advanced Cluster Security provides a workflow around managing CVEs so that teams can request the deferral of specific CVEs in situations where fixes are not yet availble. The security or platform team would then be responsible for approving or denying those deferrals as needed.
+Red Hat Advanced Cluster Security には CVE 管理のワークフローがあり、修正がまだ利用できない場合などに特定 CVE の defer（延期）を申請できます。
+その後、security または platform チームが必要に応じて承認／却下します。
 
-That's it! You now have a better understanding of how Red Hat ACS allows you to define security policies that can in turn be used within the DevSecOps pipeline as security gates to prevent untrusted / undesirable content from getting into your production environments, and also continuously monitor the security of your multiple clusters and applications across all environments.
+以上です！
+Red Hat ACS を使って、DevSecOps pipeline 内のセキュリティゲートとして利用できるセキュリティポリシーを定義し、trusted でない／望ましくないコンテンツが production 環境へ入ることを防ぎつつ、複数クラスターとアプリケーションのセキュリティを各環境で継続監視できることが理解できたはずです。
 
 [NOTE]
-Red Hat Advanced Cluster Security has been configured for multiple-tenants so each user can only view information with regards to the namespaces that they manage. In your case, this is the `{user}-xxxx` namespaces. This is why you only see the image and deployments that pertain to you rather then other other workshop users who have also deployed their version of the `globex-ui` image.
+Red Hat Advanced Cluster Security は multi-tenants として構成されており、各ユーザーは自分が管理する namespaces に関する情報のみ閲覧できます。
+あなたの場合は `{user}-xxxx` namespaces です。そのため、他の参加者がデプロイした `globex-ui` image や deployments ではなく、自分に関連するものだけが表示されます。
 
 == Summary
 
 Here a quick summary of all you've seen in this lab:
 
-* OpenShift Platform Plus provided is a comprehensive solution that provides multicluster management (RH ACM, not seen in the lab), continuous security (Red Hat ACS) and a Trusted Registry (Red Hat Quay) that serve as a great foundation to implement a Trusted Software Supply Chain and adopt a DevSecOps approach.
+* OpenShift Platform Plus は、マルチクラスター管理 (RH ACM。ラボでは未実施) 、継続的セキュリティ (Red Hat ACS) 、Trusted Registry (Red Hat Quay) を提供する包括的なソリューションであり、Trusted Software Supply Chain を実装して DevSecOps アプローチを採用するための優れた基盤になります。
 
-* OpenShift Pipelines (based on Tekton) offers advanced CI/CD capabilities, and allow a direct integration with RH ACS to implement a DevSecOps approach. It also provides advanced capabilities like image signing through the Tekton Chains controller.
+* OpenShift Pipelines (Tekton ベース) は高度な CI/CD 機能を提供し、RH ACS と直接統合して DevSecOps を実現できます。また Tekton Chains controller による image signing などの高度な機能も提供します。
 
-* OpenShift GitOps (based on argocd) allows you to adopt a GitOps approach to deploy your application across different environments and multiple clusters, from development to production and all intermediate stages.
+* OpenShift GitOps (ArgoCD ベース) により、開発から本番、さらにその中間段階も含め、複数環境・複数クラスターへアプリケーションをデプロイする GitOps アプローチを採用できます。
 
-* Red Hat Advanced Cluster Security offers out-of-the-box security capabilities such as security policies and image scanning for vulnerabilities to a continuous security monitoring across all your clusters.
-
+* Red Hat Advanced Cluster Security は、security policies や image scanning (脆弱性) などの out-of-the-box セキュリティ機能を提供し、全クラスターにわたる継続的なセキュリティ監視を実現します。
 
 == Learning References
 
-https://www.redhat.com/en/blog/red-hat-openshift-and-sigstore[Red Hat OpenShift and Sigstore^]: A comprehensive blog explaining the integration of OpenShift with Cosign.
+https://www.redhat.com/en/blog/red-hat-openshift-and-sigstore[Red Hat OpenShift and Sigstore^]: OpenShift と Cosign の統合を解説した包括的なブログ。
 
-https://docs.openshift.com/pipelines/1.12/secure/using-tekton-chains-for-openshift-pipelines-supply-chain-security.html[Using Tekton Chains for OpenShift Pipelines Supply Chain Security^]: Detailed documentation on implementing and understanding Tekton Chains within OpenShift.
+https://docs.openshift.com/pipelines/1.12/secure/using-tekton-chains-for-openshift-pipelines-supply-chain-security.html[Using Tekton Chains for OpenShift Pipelines Supply Chain Security^]: OpenShift で Tekton Chains を実装・理解するための詳細ドキュメント。
 
-https://docs.openshift.com/acs/4.2/operating/verify-image-signatures.html[ACS Integration Guide^]: A guide on integrating ACS with Cosign for enhanced container image verification.
+https://docs.openshift.com/acs/4.2/operating/verify-image-signatures.html[ACS Integration Guide^]: ACS と Cosign を統合し、container image の検証を強化するためのガイド。

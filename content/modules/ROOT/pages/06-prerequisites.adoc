@@ -1,40 +1,34 @@
 = Prerequisites
 
-Each module in this workshop depends on work performed in previous modules. This section
-lays out the work that is required from previous modules in case you need to advance for
-some reason such as not being able to complete a module due to time, technical difficulties
-or the instructor running a shortened version of the workshop.
+このワークショップの各モジュールは、前のモジュールで実施した作業に依存しています。
+本セクションでは、時間の都合、技術的な問題、または講師が短縮版で進行するなどの理由で先に進む必要がある場合に備えて、前モジュールで必要となる作業を整理します。
 
 == Module 1 - OpenShift as an Application Platform
 
-In this module participants learn how to use the OpenShift console and command line to
-deploy applications. The work performed here to login into OpenShift and clone
-the workshop git repository is required in all following modules.
+このモジュールでは、OpenShift console とコマンドラインを使ってアプリケーションをデプロイする方法を学びます。
+ここで行う OpenShift へのログインと、ワークショップ用の git リポジトリのクローンは、以降のすべてのモジュールで必要になります。
 
-* Access the OpenShift console here:
+* OpenShift console にはこちらからアクセスします:
 
 link:{openshift_console_url}[{openshift_console_url},window='_blank']
 
-* Login into the console using the *Keycloak* provider:
+* console には *Keycloak* プロバイダーでログインします:
 
 image::ocp-app/openshift_login.png[width=80%]
 
 [IMPORTANT]
-If you accidentally login with the `htpasswd_provider` option then you will not be
-able to login to OpenShift with Keycloak. Please ask your instructor
-to correct it by deleting the OpenShift user and identity before logging in again
-with Keycloak.
+誤って `htpasswd_provider` オプションでログインしてしまうと、Keycloak で OpenShift にログインできなくなります。
+その場合は、Keycloak で再ログインする前に、講師に依頼して OpenShift の user と identity を削除してもらってください。
 
-* Use the username `{user}` and password `openshift`
+* ユーザー名 `{user}`、パスワード `openshift` を使用します。
 
-* In OpenShift Console you will need to click on your user name in
-the upper right corner and select `Copy login command`:
+* OpenShift Console では、右上のユーザー名をクリックし、`Copy login command` を選択します:
 
 image::ocp-app/oc_login_command.png[width=80%]
 
-* Paste the command into the terminal to login into OpenShift.
+* 表示されたコマンドをターミナルに貼り付けて、OpenShift にログインします。
 
-* Finally clone the `workshop` repository with the following command:
+* 最後に、以下のコマンドで `workshop` リポジトリをクローンします:
 
 [.console-input]
 [source,bash,subs="attributes+,+macros"]
@@ -44,11 +38,10 @@ git clone -b main --single-branch https://gitea-gitea.{subdomain}/user1/workshop
 
 == Module 2 - Introduction to GitOps
 
-This module provides an introduction to GitOps and shows how to deploy applications using
-kustomize, helm and ApplicationSets. These applications are required to be deployed for Module
-4.
+このモジュールでは GitOps の入門として、kustomize、helm、ApplicationSets を使ったアプリケーションのデプロイ方法を紹介します。
+ここでデプロイするアプリケーションは Module 4 で必要になります。
 
-* Deploy the Coolstore Application using the ApplicationSet
+* ApplicationSet を使って Coolstore Application をデプロイします。
 
 [.console-input]
 [source,sh,subs="attributes",role=execute]
@@ -56,7 +49,7 @@ kustomize, helm and ApplicationSets. These applications are required to be deplo
 sed 's/$USER/{user}/' ~/workshop/content/modules/ROOT/examples/coolstore-gitops-appset.yaml | sed 's/$SUBDOMAIN/{subdomain}/' | oc apply -f - -n {user}-argocd
 ----
 
-* Deploy the Pipeline that will be required to build the front-end image in Module 4
+* Module 4 でフロントエンド image をビルドするために必要となる Pipeline をデプロイします。
 
 [.console-input]
 [source,bash,subs="attributes+,+macros"]
@@ -66,9 +59,10 @@ sed 's/$USER/{user}/' ~/workshop/content/modules/ROOT/examples/pipeline-helm-app
 
 == Module 3 - Advanced GitOps
 
-This module shows Advanced GitOps techniques in the context of supporting Argo CD as part of a platform solution. It is dependent on Module 1
-but is a standalone module otherwise.
+このモジュールでは、プラットフォームソリューションの一部として Argo CD をサポートする文脈で、高度な GitOps テクニックを紹介します。
+Module 1 には依存しますが、それ以外は独立したモジュールです。
 
 == Module 4 - Trusted Software Supply Chain
 
-This module depends on module 1 and module 2, please perform those prerequisites before proceeding with this module.
+このモジュールは Module 1 と Module 2 に依存します。
+先に進む前に、それらの前提作業を実施してください。

@@ -1,18 +1,17 @@
 = Conclusion (15 Minutes)
 
-In this workshop you have learned the following:
+このワークショップでは、以下の内容を学びました。
 
-* Using the OpenShift Console to deploy applications
-* How to use GitOps to deploy Applications using Kustomize and Helm
-* Leveraging GitOps ApplicationSets to dynamically generate Applications
-* Advanced GitOps configuration and techniques needed for deploying it as part of a platform solution
-* Using OpenShift Pipelines to build applications validating the supply-side software chain
-* Leveraging Red Hat Trusted Artifact Signer (RHTAS) based on SigStore to validate signed images
-* Using Red Hat Advanced Cluster Security to enforce policies to require signed images
+* OpenShift Console を使ってアプリケーションをデプロイする方法
+* Kustomize と Helm を使って GitOps で Applications をデプロイする方法
+* GitOps ApplicationSets を活用して Applications を動的に生成する方法
+* プラットフォームソリューションの一部としてデプロイするために必要な、高度な GitOps 設定とテクニック
+* OpenShift Pipelines を使って、サプライサイドのソフトウェアチェーンを検証しながらアプリケーションをビルドする方法
+* SigStore をベースとした Red Hat Trusted Artifact Signer (RHTAS) を活用して、署名済み image を検証する方法
+* Red Hat Advanced Cluster Security を使って、署名済み image を必須とするポリシーを強制する方法
 
-We hope you enjoyed the time spent in this workshop. As always feedback is greatly appreciated,
-please feel free to offer comments and suggestions to your instructors in terms of content or
-process improvements you would like to see in this workshop.
+このワークショップを楽しんでいただけたなら幸いです。
+いつもどおりフィードバックは大歓迎ですので、内容や進め方について改善してほしい点などがあれば、ぜひ講師へコメントや提案をお寄せください。
 
 [#more-information]
 == More Information:
@@ -27,10 +26,9 @@ a|image::conclusion/GettingGitOps.png[Getting GitOps, link=https://developers.re
 
 === GitHub Repository
 
-The content of this workshop and the GitOps plumbing use to provision this workshop is available in Git
-in the link:https://github.com/AdvancedDevSecOpsWorkshop[AdvancedDevSecOps,window=+"_blank"] organization. Specific
-repositories and links:
+本ワークショップのコンテンツと、このワークショップをプロビジョニングするために使用している GitOps の構成（plumbing）は、Git 上の link:https://github.com/AdvancedDevSecOpsWorkshop[AdvancedDevSecOps,window=+"_blank"] organization で公開されています。
+具体的なリポジトリとリンクは以下のとおりです。
 
-* GitHub repo for link:https://github.com/AdvancedDevSecOpsWorkshop/workshop[raw ASCIIDoc content,window="_blank"]
-* Browseable compiled workshop link:https://advanceddevsecopsworkshop.github.io/workshop[content,window=+_blank"].
-* GitOps plumbing used to provision workshop is in the link:https://github.com/AdvancedDevSecOpsWorkshop/bootstrap[bootstrap,window="_blank"] repo.
+* raw ASCIIDoc content の GitHub repo: https://github.com/AdvancedDevSecOpsWorkshop/workshop[raw ASCIIDoc content,window="_blank"]
+* ブラウザで閲覧できるコンパイル済みワークショップコンテンツ: link:https://advanceddevsecopsworkshop.github.io/workshop[content,window=+_blank"].
+* ワークショップのプロビジョニングに使用した GitOps plumbing: link:https://github.com/AdvancedDevSecOpsWorkshop/bootstrap[bootstrap,window="_blank"] repo.
