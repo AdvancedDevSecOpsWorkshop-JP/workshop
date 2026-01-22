@@ -2,30 +2,30 @@
 :page-layout: home
 :!sectids:
 
-== 1. はじめに（Overview）
+== 1. Introduction and Overview
 
 *OpenShift DevSecOps Roadshowへようこそ！*
 この Roadshow では、 https://www.redhat.com/ja/technologies/cloud-computing/openshift[Open Hybrid Cloud^] でアプリケーションを運用するための https://www.redhat.com/ja/topics/devops[DevOps^] および https://www.redhat.com/ja/topics/devops/what-is-devsecops[DevSecOps^] のプラクティスを採用する技術と手法について学びます。
 
-== 2. 主なポイント（Key Takeaways）
+== 2. Key Takeaways
 
 * *Red Hat OpenShift* を *“信頼性/包括的/一貫性”* を備えたアプリケーション・プラットフォームとして最大限に活用する方法を学ぶ。
 * *OpenShift Pipelines* を使った *CI/CD* パイプラインを深掘りします。
 * *OpenShift GitOps* と *Trusted Software Supply Chain* を活用し、セキュアに *DevSecOps* のベストプラクティスを採用します。
 
-== 3. 環境概要（Environment Overview）
+== 3. Environment Overview
 
 このクラスターは、皆さまとこの Roadshow のために専用でプロビジョニングされています。
 本日の演習では、各モジュールで共有される事前定義済みの認証情報（credentials）を使って、同一のクラスターにアクセスします。
 
 以下は、OpenShift クラスターにインストールおよび設定済みのテクノロジーの一覧です。
 
-=== 3.1 テクノロジーフロー図
+=== 3.1 Technology Flow Diagram
 
 image::intro/devops_env_architecture.png[width=100%]
 図1. テクノロジースタックとそれらの相互連携を示す
 
-=== 3.2 テクノロジースタック
+=== 3.2 Technology Stack
 
 * https://www.redhat.com/ja/technologies/cloud-computing/openshift[Red Hat OpenShift^] は、アプリケーションを大規模に ビルド・モダナイズ・デプロイ するための統合プラットフォームです。選択したインフラ上でアプリケーションを市場投入するためのサービス一式を提供し、よりスマートに、より速く作業を進められます。
 

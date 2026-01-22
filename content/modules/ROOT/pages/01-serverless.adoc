@@ -1,4 +1,4 @@
-= Application Platform としての OpenShift: 信頼性/包括的/一貫性(45 mins)
+= OpenShift as An Application Platform: Trusted - Comprehensive - Consistent(45 mins)
 
 このモジュールでは、OpenShift をアプリケーション・プラットフォームとして包括的に理解します。
 モダナイゼーションから、オープン・ハイブリッドクラウド上でのアプリケーションのビルド／デプロイ／管理、さらに Serverless による自動スケーリングまで、日々の作業を加速させるためのポイントを学びます。
@@ -14,7 +14,7 @@
 * アプリケーションの状態、CPU 使用率、イベントを確認します。
 
 [#openshift_as_an_application_platform_overview]
-== Application Platform としての OpenShift について
+== OpenShift as an Application Platform Overview
 
 *Red Hat OpenShift* は、オープンスタンダードに基づいた、 *“信頼性/包括的/一貫性”* を備えたアプリケーション・プラットフォームであり、
 レガシーアプリケーションからクラウドネイティブアプリケーションまで、開発・提供・実行を成功させるための重要な機能を備えています。
@@ -29,14 +29,14 @@ image::ocp-app/devops_01_ocpapp_platform.png[width=100%]
 * *Red Hat OpenShift* は、開発者・運用担当者・プラットフォームエンジニアに対して、*一貫性のあるユーザー体験* を提供します。オンプレミス、パブリッククラウド、エッジ、ハイブリッドインフラのいずれであっても、好きなツールを使って、どこにでも迅速にアプリをビルド／デプロイできる自由を提供します。
 
 
-== OpenShift console から Application Platform としての OpenShift を確認する
+== Exploring OpenShift as an Application Platform from the OpenShift console
 
 このセクションでは、*Image Build*、*Runtimes*、*Serverless*、*CI/CD* など、これまでに触れた機能の一部を実際に確認していきます。
 
 *Red Hat OpenShift* では、*Developer perspective* を使ってアプリケーションおよび関連するコンポーネント／サービスを作成し、それらがどのように連携して動くかを定義し、時間の経過とともに健全性を監視できます。
 
 
-=== UBI Images を利用する
+=== Working with UBI Images
 
 Red Hat Universal Base Images（UBI）は、OCI 準拠のコンテナ用ベース OS イメージであり、補完的なランタイム言語やパッケージを含み、自由に再配布できます。
 https://www.redhat.com/ja/blog/introducing-red-hat-universal-base-image[Red Hat Universal Base Image の (再) 紹介^]
@@ -44,14 +44,14 @@ https://www.redhat.com/ja/blog/introducing-red-hat-universal-base-image[Red Hat 
 Developer perspective では、OpenShift 上でビルドおよびデプロイする新規アプリケーションのベースイメージとして、UBI イメージを選択できます。
 
 
-=== *Serverless を利用する*
+=== *Working with Serverless*
 Serverless のクラウドコンピューティングモデルは、ハイブリッドクラウド向けに、モダンでクラウドネイティブなアプリ開発スタックを開発者に提供します。
 Serverless により、開発者はインフラを気にすることなくコードに集中できます。
 Red Hat® OpenShift® Serverless は、単一ベンダーへのロックインを避け、マルチクラウドのアプローチを可能にします。
 オープンソースの *Knative project* をベースとする *Red Hat OpenShift Serverless* は、イベント駆動のクラウドネイティブアプリを、シンプルかつ効率的にスケール可能な形で開発するための “橋渡し” となります。
 *Knative* には主に *Knative Serving* と *Knative Eventing* の2つのコンポーネントがあります。
 
-=== *Serverless のメリット*
+=== *Benefits of Serverless*
 
 - クラウドネイティブ開発の簡素化
 - 自動スケーリング
@@ -73,9 +73,9 @@ image::ocp-app/serverless_types.png[width=100%]
 
 image::ocp-app/serverless_serving.png[width=100%]
 
-== OpenShift Web Console を使ってアプリケーションをモダナイズする
+== Modernize applications using OpenShift Web Console
 
-=== アプリケーションの概要
+=== Application Overview
 
 - *Web NodeJS*: 最近作成したアプリケーションで、ユーザーが coolstore と対話するための UI を提供します。
 - *Gateway-vertx*: UI と、その他のアプリケーションサービス群の間を中継するゲートウェイとして動作する Java アプリケーションです。
@@ -86,9 +86,9 @@ image::ocp-app/coolstore_diagram.png[width=80%]
 coolstore のマイクロサービス群を構成する最終的なトポロジー（Topology）表示のイメージ
 
 [#building_a_serverless_application_with_the_openshift_application_platform]
-== OpenShift Application Platform で Serverless アプリケーションを構築する
+== Building a Serverless application with the OpenShift Application Platform
 
-=== OpenShift Web Console にアクセスする
+=== Access the OpenShift Web Console
 
 以下の URL から OpenShift Console にアクセスできます。
 
@@ -122,7 +122,7 @@ Keycloak にリダイレクトされるので、認証情報を使ってログ�
 
 ログイン後、OpenShift Console に戻ります。
 
-=== ターミナルから OpenShift にログインする
+=== Log in the OpenShift using the terminal:
 
 Keycloak SSO を利用しているため、コンソールから CLI ログインコマンドをコピーする必要があります。
 画面右上のユーザー名をクリックし、`Copy login command` を選択してください。
@@ -182,7 +182,7 @@ OpenShift の新しいバージョンでは `oc login --web <openshift-api-url>`
 ただし本ワークショップでは、ターミナルを pod 内で実行しているため、Keycloak が pod 内のターミナルへリダイレクトして戻すことができません。
 そのため、このワークショップでは `Copy login command` の手順を使用します。
 
-=== プロジェクトを作成する
+=== Create your project
 
 * {app_name} をデプロイするための新しいプロジェクトを作成します。ターミナルで以下のコマンドを実行してください。
 
@@ -226,10 +226,10 @@ output:
     service/inventory-quarkus created
 ----
 
-=== Topology view を確認する
+=== Explore the topology view
 Web コンソールの Developer perspective にある Topology view は、プロジェクト内のすべてのアプリケーション、ビルド状況、関連コンポーネント／サービスを可視化して表示します。
 
-==== Coolstore アプリケーションを構成するマイクロサービス群を確認する
+==== Review the set of microservices that composed the Coolstore application
 
 ** *Topology* をクリックして Developer Perspective にアクセスします。
 
@@ -243,7 +243,7 @@ https://docs.openshift.com/container-platform/latest/applications/odc-viewing-ap
 
 ご覧のとおり、UI と catalog 以外はそろっています。次のセクションでは、この UI を OpenShift に移行します。
 
-=== アプリケーションをインポートする
+=== Import the application
 
 このセクションでは、Developer Perspective を使って UI のソースコードを OpenShift に取り込みます。
 
@@ -294,7 +294,7 @@ image::ocp-app/serverless.png[width=80%]
 
 https://docs.openshift.com/container-platform/latest/applications/creating_applications/odc-creating-applications-using-developer-perspective.html[参考情報^]
 
-==== ビルドとデプロイを確認する
+==== Verify build and deployment:
 
 1. *No Revisions* をクリックして新しい Service を選択します。
 2. 右側メニューの *Resources* タブをクリックします。
@@ -321,7 +321,7 @@ image::ocp-app/coolstore_topology_web.png[width=80%]
 ビルド完了後にアプリケーションが起動します。
 また、Web ブラウザからアプリケーションにアクセスし HTTP リクエストを受けると、アプリケーションが再起動（起動）します。
 
-==== アプリケーションが稼働していることを確認する
+==== Verify the application is running
 
 * Resources タブの *Routes* をクリックし、アプリケーションが稼働していることを確認します。
 
@@ -344,12 +344,12 @@ https://docs.openshift.com/serverless/latest/knative-serving/autoscaling/serverl
 ほんの数クリックで OpenShift に新しいアプリケーションをビルドしてデプロイできました！
 
 [#building_a_backend_application_using_the_openshift_application_platform_with_openshift_pipelines]
-== OpenShift Pipelines を使って OpenShift Application Platform 上でバックエンドアプリケーションを構築する
+== Building a backend application using the OpenShift Application Platform with OpenShift Pipelines
 
 このセクションでは、Developer Perspective を使って catalog（Java Spring Boot）アプリケーションを OpenShift に移行します。OpenShift は、自動化された CI/CD パイプラインと、アプリケーションに必要な マニフェスト 一式を作成します。
 
 
-=== *OpenShift Pipelines による CI/CD*
+=== *CI/CD with OpenShift Pipelines*
 
 Red Hat OpenShift Pipelines は、Kubernetes リソースをベースにしたクラウドネイティブな継続的インテグレーション／継続的デリバリー（CI/CD）ソリューションです。
 Tekton のビルディングブロックを利用し、基盤となる実装の詳細を抽象化することで、複数プラットフォームにまたがるデプロイを自動化します。
@@ -358,7 +358,7 @@ Tekton は、Kubernetes ディストリビューションをまたいで移植�
 
 https://docs.openshift.com/pipelines/latest/about/understanding-openshift-pipelines.html[OpenShift Pipelines^] は、CI/CD パイプラインの各ステップをそれぞれ独立したコンテナで設計・実行できる、Kubernetes ネイティブな CI/CD フレームワークを提供します。オンデマンドのパイプラインに合わせて独立してスケールでき、予測可能な結果を得られます。
 
-=== OpenShift Pipeline の概念
+=== OpenShift Pipeline Concepts
 
 * *Task* リソースはパイプラインの構成要素であり、順次実行されるステップで構成されます。基本的には、入力と出力を持つ “関数” のようなものです。
 
@@ -374,7 +374,7 @@ image::ocp-app/task_run.png[width=80%]
 
 image::ocp-app/pipeline_run.png[width=80%]
 
-=== バックエンドアプリケーションを作成する
+=== Create your backend application
 
 
 1. Developer Perspective にアクセスします。
@@ -401,7 +401,7 @@ image::ocp-app/deployment.png[width=80%]
 
 * *Create* をクリックします。
 
-==== ビルドとデプロイを確認する
+==== Verify build and deployment:
 
 * Topology view で新しい Deployment *catalog-spring-boot* をクリックします。
 * *Pipeline Runs* をクリックします。
@@ -464,7 +464,7 @@ image::ocp-app/events.png[width=80%]
 https://docs.openshift.com/container-platform/latest/observability/monitoring/about-ocp-monitoring/about-ocp-monitoring.html[Reviewing monitoring dashboards^]
 
 [#conclusion]
-== セクションの振り返り
+== Conclusion
 
 Developer Perspective を使うと、アプリケーションを作成・ビルド・管理できます（コマンドラインでも同様に実施可能です）。
 Developer perspective は強力なツールであり、Git リポジトリ、helm chart、jar file など、さまざまなソースからアプリケーションを取り込めます。
@@ -477,7 +477,7 @@ Serverless は、トラフィックを受けている間だけアプリケーシ
 Pipelines は選択時に自動生成できます。また、組織の要件やガイドラインを踏まえて、生成されたパイプラインを強化・拡張できます。
 
 [#more_information]
-== 参考情報
+== More Information:
 
 * https://docs.openshift.com/container-platform/latest/applications/creating_applications/odc-creating-applications-using-developer-perspective.html[Creating applications using the Developer perspective^]
 * https://docs.openshift.com/container-platform/latest/applications/odc-viewing-application-composition-using-topology-view.html[Viewing application composition using the Topology view^]
